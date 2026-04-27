@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* SIGANTARA Brand Colors */
+    --color-primary-50: #fef3e2;
+    --color-primary-100: #fde4b9;
+    --color-primary-200: #fcd48c;
+    --color-primary-300: #fbc35f;
+    --color-primary-400: #fab63d;
+    --color-primary-500: #f9a825;
+    --color-primary-600: #f59a20;
+    --color-primary-700: #ef8919;
+    --color-primary-800: #e97a14;
+    --color-primary-900: #df600b;
+
+    --color-accent-50: #e8f5e9;
+    --color-accent-100: #c8e6c9;
+    --color-accent-200: #a5d6a7;
+    --color-accent-300: #81c784;
+    --color-accent-400: #66bb6a;
+    --color-accent-500: #4caf50;
+    --color-accent-600: #43a047;
+    --color-accent-700: #388e3c;
+    --color-accent-800: #2e7d32;
+    --color-accent-900: #1b5e20;
+
+    --color-dark-50: #f5f5f6;
+    --color-dark-100: #e6e6e7;
+    --color-dark-200: #cfd0d2;
+    --color-dark-300: #adaeb2;
+    --color-dark-400: #84858b;
+    --color-dark-500: #696a70;
+    --color-dark-600: #5a5a60;
+    --color-dark-700: #4d4d51;
+    --color-dark-800: #434347;
+    --color-dark-900: #27272a;
+    --color-dark-950: #18181b;
+}
+
+/* Custom utilities */
+@utility glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+@utility text-gradient {
+    background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@utility animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@utility animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+@utility animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(249, 168, 37, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(249, 168, 37, 0.6); }
+}

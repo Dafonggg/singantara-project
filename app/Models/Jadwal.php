@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+#[Fillable(['booking_id', 'karyawan_id', 'peran', 'status_hadir'])]
+class Jadwal extends Model
+{
+    public function getStatusHadirLabelAttribute(): string
+    {
+        return match ($this->status_hadir) {
+            'belum' => 'Belum Konfirmasi',
+            'hadir' => 'Hadir',
+            'tidak_hadir' => 'Tidak Hadir',
+            default => ucfirst($this->status_hadir),
+        };
+    }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class);
+    }
+
+    public function karyawan(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'karyawan_id');
+    }
+}
