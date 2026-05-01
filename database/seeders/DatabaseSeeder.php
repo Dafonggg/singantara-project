@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\BankAccount;
 use App\Models\Galeri;
 use App\Models\Paket;
 use App\Models\User;
@@ -91,6 +92,31 @@ class DatabaseSeeder extends Seeder
             'harga' => 15000000,
             'jumlah_pemain' => 40,
             'durasi' => '5-6 jam',
+            'is_active' => true,
+        ]);
+
+        // ── Rekening Bank ─────────────────────────────
+        BankAccount::create([
+            'nama_bank' => 'Bank BCA',
+            'kode_bank' => 'bca',
+            'nomor_rekening' => '1234567890',
+            'atas_nama' => 'Alan Group Sisingaan',
+            'is_active' => true,
+        ]);
+
+        BankAccount::create([
+            'nama_bank' => 'Bank BRI',
+            'kode_bank' => 'bri',
+            'nomor_rekening' => '098765432100',
+            'atas_nama' => 'Alan Group Sisingaan',
+            'is_active' => true,
+        ]);
+
+        BankAccount::create([
+            'nama_bank' => 'Bank Mandiri',
+            'kode_bank' => 'mandiri',
+            'nomor_rekening' => '112233445566',
+            'atas_nama' => 'Alan Group Sisingaan',
             'is_active' => true,
         ]);
     }

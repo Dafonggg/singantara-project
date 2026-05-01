@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('galeris', function (Blueprint $table) {
+        Schema::create('bank_accounts', function (Blueprint $table) {
             $table->id();
-            $table->string('judul');
-            $table->string('gambar')->nullable();
-            $table->text('deskripsi')->nullable();
+            $table->string('nama_bank');
+            $table->string('kode_bank')->unique(); // e.g. 'bca', 'bri', 'mandiri'
+            $table->string('nomor_rekening');
+            $table->string('atas_nama');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('galeris');
+        Schema::dropIfExists('bank_accounts');
     }
 };

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'user_id', 'paket_id', 'kode_booking', 'tanggal_acara', 'jam_acara',
@@ -101,5 +102,10 @@ class Booking extends Model
     public function jadwals(): HasMany
     {
         return $this->hasMany(Jadwal::class);
+    }
+
+    public function testimonial(): HasOne
+    {
+        return $this->hasOne(Testimonial::class);
     }
 }

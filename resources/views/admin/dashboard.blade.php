@@ -2,35 +2,57 @@
     <div class="pt-24 pb-12 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h1 class="text-2xl sm:text-3xl font-bold">Dashboard Admin 🛡️</h1>
+                <h1 class="text-2xl sm:text-3xl font-bold flex items-center gap-2">Dashboard Admin <x-heroicon-o-shield-check class="w-7 h-7 text-primary-400" /></h1>
                 <p class="text-dark-400 mt-1">Overview sistem SIGANTARA</p>
             </div>
 
             {{-- Stats Grid --}}
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                @php
-                    $statCards = [
-                        ['label' => 'Total Booking', 'value' => $stats['total_bookings'], 'icon' => '📋', 'color' => 'primary'],
-                        ['label' => 'Pending', 'value' => $stats['pending_bookings'], 'icon' => '⏳', 'color' => 'yellow'],
-                        ['label' => 'Pendapatan', 'value' => 'Rp ' . number_format($stats['total_revenue'], 0, ',', '.'), 'icon' => '💰', 'color' => 'accent'],
-                        ['label' => 'Pelanggan', 'value' => $stats['total_customers'], 'icon' => '👥', 'color' => 'blue'],
-                    ];
-                @endphp
-                @foreach($statCards as $card)
-                    <div class="glass rounded-2xl p-5">
-                        <div class="text-2xl mb-2">{{ $card['icon'] }}</div>
-                        <div class="text-2xl font-bold">{{ $card['value'] }}</div>
-                        <div class="text-sm text-dark-400 mt-1">{{ $card['label'] }}</div>
-                    </div>
-                @endforeach
+                <div class="glass rounded-2xl p-5">
+                    <div class="mb-2"><x-heroicon-o-clipboard-document-list class="w-6 h-6 text-primary-400" /></div>
+                    <div class="text-2xl font-bold">{{ $stats['total_bookings'] }}</div>
+                    <div class="text-sm text-dark-400 mt-1">Total Booking</div>
+                </div>
+                <div class="glass rounded-2xl p-5">
+                    <div class="mb-2"><x-heroicon-o-clock class="w-6 h-6 text-yellow-400" /></div>
+                    <div class="text-2xl font-bold">{{ $stats['pending_bookings'] }}</div>
+                    <div class="text-sm text-dark-400 mt-1">Pending</div>
+                </div>
+                <div class="glass rounded-2xl p-5">
+                    <div class="mb-2"><x-heroicon-o-currency-dollar class="w-6 h-6 text-accent-400" /></div>
+                    <div class="text-2xl font-bold">Rp {{ number_format($stats['total_revenue'], 0, ',', '.') }}</div>
+                    <div class="text-sm text-dark-400 mt-1">Pendapatan</div>
+                </div>
+                <div class="glass rounded-2xl p-5">
+                    <div class="mb-2"><x-heroicon-o-user-group class="w-6 h-6 text-blue-400" /></div>
+                    <div class="text-2xl font-bold">{{ $stats['total_customers'] }}</div>
+                    <div class="text-sm text-dark-400 mt-1">Pelanggan</div>
+                </div>
             </div>
 
             {{-- Quick Nav --}}
             <div class="flex flex-wrap gap-3 mb-8">
-                <a href="{{ route('admin.bookings.index') }}" class="px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">📋 Kelola Booking</a>
-                <a href="{{ route('admin.payments.index') }}" class="px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">💳 Pembayaran ({{ $stats['pending_payments'] }})</a>
-                <a href="{{ route('admin.paket.index') }}" class="px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">📦 Manage Paket</a>
-                <a href="{{ route('admin.karyawan.index') }}" class="px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">👷 Karyawan ({{ $stats['total_karyawan'] }})</a>
+                <a href="{{ route('admin.bookings.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
+                    <x-heroicon-o-clipboard-document-list class="w-4 h-4" /> Kelola Booking
+                </a>
+                <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
+                    <x-heroicon-o-credit-card class="w-4 h-4" /> Pembayaran ({{ $stats['pending_payments'] }})
+                </a>
+                <a href="{{ route('admin.paket.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
+                    <x-heroicon-o-cube class="w-4 h-4" /> Manage Paket
+                </a>
+                <a href="{{ route('admin.karyawan.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
+                    <x-heroicon-o-wrench-screwdriver class="w-4 h-4" /> Karyawan ({{ $stats['total_karyawan'] }})
+                </a>
+                <a href="{{ route('admin.galeri.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
+                    <x-heroicon-o-photo class="w-4 h-4" /> Galeri
+                </a>
+                <a href="{{ route('admin.testimonials.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
+                    <x-heroicon-o-chat-bubble-bottom-center-text class="w-4 h-4" /> Testimoni
+                </a>
+                <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
+                    <x-heroicon-o-shield-check class="w-4 h-4" /> Kelola Admin
+                </a>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -74,14 +96,19 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="p-8 text-center text-dark-400 text-sm">Tidak ada pembayaran menunggu ✅</div>
+                        <div class="p-8 text-center text-dark-400 text-sm flex flex-col items-center gap-2">
+                            <x-heroicon-o-check-circle class="w-6 h-6 text-accent-400" />
+                            Tidak ada pembayaran menunggu
+                        </div>
                     @endif
                 </div>
             </div>
 
             {{-- Revenue Chart --}}
             <div class="glass rounded-2xl p-6 mt-6">
-                <h2 class="font-bold text-lg mb-4">📊 Pendapatan 6 Bulan Terakhir</h2>
+                <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <x-heroicon-o-chart-bar class="w-5 h-5 text-primary-400" /> Pendapatan 6 Bulan Terakhir
+                </h2>
                 <canvas id="revenueChart" height="100"></canvas>
             </div>
         </div>

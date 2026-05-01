@@ -3,6 +3,22 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <a href="{{ route('admin.bookings.index') }}" class="text-sm text-dark-400 hover:text-primary-400">← Kelola Booking</a>
 
+            {{-- Flash Messages --}}
+            @if(session('success'))
+                <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 5000)" class="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 flex items-center gap-3">
+                    <span class="text-lg">✅</span>
+                    <span class="text-sm font-medium">{{ session('success') }}</span>
+                    <button @click="show = false" class="ml-auto text-green-400/60 hover:text-green-400">&times;</button>
+                </div>
+            @endif
+            @if(session('error'))
+                <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 6000)" class="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-3">
+                    <span class="text-lg">❌</span>
+                    <span class="text-sm font-medium">{{ session('error') }}</span>
+                    <button @click="show = false" class="ml-auto text-red-400/60 hover:text-red-400">&times;</button>
+                </div>
+            @endif
+
             <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {{-- Main Detail --}}
                 <div class="lg:col-span-2 space-y-6">
@@ -46,7 +62,7 @@
                             <div class="bg-dark-800/50 rounded-xl p-4 mb-3 flex items-center justify-between">
                                 <div>
                                     <div class="text-sm font-semibold">{{ ucfirst($payment->jenis) }} - Rp {{ number_format($payment->jumlah, 0, ',', '.') }}</div>
-                                    <div class="text-xs text-dark-500">{{ $payment->created_at->format('d/m/Y H:i') }}</div>
+                                    <div class="text-xs text-dark-500">{{ ucfirst(str_replace('_', ' ', $payment->metode)) }} · {{ $payment->created_at->format('d/m/Y H:i') }}</div>
                                     @if($payment->bukti_transfer)
                                         <a href="{{ asset('storage/' . $payment->bukti_transfer) }}" target="_blank" class="text-xs text-primary-400 hover:text-primary-300">Lihat Bukti →</a>
                                     @endif
@@ -90,17 +106,24 @@
                             </div>
                         @endforeach
 
-                        <form method="POST" action="{{ route('admin.bookings.assign', $booking) }}" class="mt-4 space-y-3">
-                            @csrf
-                            <select name="karyawan_id" required class="w-full px-3 py-2 rounded-xl bg-dark-800/50 border border-dark-700 text-white text-sm">
-                                <option value="">Pilih Karyawan</option>
-                                @foreach($karyawans as $k)
-                                    <option value="{{ $k->id }}">{{ $k->name }}</option>
-                                @endforeach
-                            </select>
-                            <input type="text" name="peran" placeholder="Peran (opsional)" class="w-full px-3 py-2 rounded-xl bg-dark-800/50 border border-dark-700 text-white text-sm">
-                            <button type="submit" class="w-full py-2 rounded-xl text-sm font-bold bg-accent-500/10 text-accent-400 border border-accent-500/20 hover:bg-accent-500/20 transition-all">+ Tambah Karyawan</button>
-                        </form>
+                        {{-- Only show assign form if there are available karyawans --}}
+                        @if($karyawans->count() > 0)
+                            <form method="POST" action="{{ route('admin.bookings.assign', $booking) }}" class="mt-4 space-y-3">
+                                @csrf
+                                <select name="karyawan_id" required class="w-full px-3 py-2 rounded-xl bg-dark-800/50 border border-dark-700 text-white text-sm">
+                                    <option value="">Pilih Karyawan</option>
+                                    @foreach($karyawans as $k)
+                                        <option value="{{ $k->id }}">{{ $k->name }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="text" name="peran" placeholder="Peran (opsional)" class="w-full px-3 py-2 rounded-xl bg-dark-800/50 border border-dark-700 text-white text-sm">
+                                <button type="submit" class="w-full py-2 rounded-xl text-sm font-bold bg-accent-500/10 text-accent-400 border border-accent-500/20 hover:bg-accent-500/20 transition-all">+ Tambah Karyawan</button>
+                            </form>
+                        @else
+                            <div class="mt-4 p-3 rounded-xl bg-dark-800/50 text-xs text-dark-400 text-center">
+                                Semua karyawan aktif sudah ditugaskan ke booking ini.
+                            </div>
+                        @endif
                     </div>
 
                     @if($booking->latitude && $booking->longitude)

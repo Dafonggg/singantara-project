@@ -29,6 +29,8 @@ class PaketController extends Controller
             'harga' => 'required|numeric|min:0',
             'jumlah_pemain' => 'required|integer|min:1',
             'durasi' => 'nullable|string|max:50',
+            'daftar_isi' => 'nullable|array',
+            'daftar_isi.*' => 'nullable|string|max:255',
             'gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'is_active' => 'boolean',
         ]);
@@ -38,6 +40,11 @@ class PaketController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active');
+
+        // Filter empty items from daftar_isi
+        if (isset($validated['daftar_isi'])) {
+            $validated['daftar_isi'] = array_values(array_filter($validated['daftar_isi'], fn($item) => !empty(trim($item))));
+        }
 
         Paket::create($validated);
 
@@ -57,6 +64,8 @@ class PaketController extends Controller
             'harga' => 'required|numeric|min:0',
             'jumlah_pemain' => 'required|integer|min:1',
             'durasi' => 'nullable|string|max:50',
+            'daftar_isi' => 'nullable|array',
+            'daftar_isi.*' => 'nullable|string|max:255',
             'gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'is_active' => 'boolean',
         ]);
@@ -69,6 +78,13 @@ class PaketController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active');
+
+        // Filter empty items from daftar_isi
+        if (isset($validated['daftar_isi'])) {
+            $validated['daftar_isi'] = array_values(array_filter($validated['daftar_isi'], fn($item) => !empty(trim($item))));
+        } else {
+            $validated['daftar_isi'] = [];
+        }
 
         $paket->update($validated);
 

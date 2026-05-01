@@ -12,7 +12,7 @@
                         @foreach($bookings as $booking)
                             <a href="{{ route('customer.booking.show', $booking) }}" class="flex items-center justify-between p-5 hover:bg-white/5 transition-colors group">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-lg">🎪</div>
+                                    <div class="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center"><x-heroicon-o-ticket class="w-5 h-5 text-primary-400" /></div>
                                     <div>
                                         <div class="font-semibold group-hover:text-primary-400 transition-colors">{{ $booking->nama_acara }}</div>
                                         <div class="text-sm text-dark-500">{{ $booking->kode_booking }} · {{ $booking->paket->nama }}</div>
@@ -39,7 +39,7 @@
                     </div>
                 @else
                     <div class="p-12 text-center">
-                        <div class="text-5xl mb-4">📭</div>
+                            <x-heroicon-o-inbox class="w-12 h-12 text-dark-600 mx-auto mb-4" />
                         <p class="text-dark-400">Belum ada riwayat booking</p>
                     </div>
                 @endif

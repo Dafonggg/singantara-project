@@ -5,6 +5,23 @@
                 <a href="{{ route('customer.dashboard') }}" class="text-sm text-dark-400 hover:text-primary-400 transition-colors">← Kembali ke Dashboard</a>
             </div>
 
+            {{-- Flash Messages (Bug 2: success/error notification) --}}
+            @if(session('success'))
+                <div x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" x-init="setTimeout(() => show = false, 5000)" class="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 flex items-center gap-3">
+                    <span class="text-lg"><x-heroicon-o-check-circle class="w-5 h-5 text-green-400" /></span>
+                    <span class="text-sm font-medium">{{ session('success') }}</span>
+                    <button @click="show = false" class="ml-auto text-green-400/60 hover:text-green-400 transition-colors">&times;</button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" x-init="setTimeout(() => show = false, 6000)" class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-3">
+                    <span class="text-lg"><x-heroicon-o-x-circle class="w-5 h-5 text-red-400" /></span>
+                    <span class="text-sm font-medium">{{ session('error') }}</span>
+                    <button @click="show = false" class="ml-auto text-red-400/60 hover:text-red-400 transition-colors">&times;</button>
+                </div>
+            @endif
+
             {{-- Booking Header --}}
             <div class="glass rounded-2xl p-6 mb-6">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -69,7 +86,7 @@
                                             </span>
                                         </div>
                                         <div class="text-lg font-bold">Rp {{ number_format($payment->jumlah, 0, ',', '.') }}</div>
-                                        <div class="text-xs text-dark-500 mt-1">{{ $payment->created_at->translatedFormat('d M Y H:i') }}</div>
+                                        <div class="text-xs text-dark-500 mt-1">{{ ucfirst(str_replace('_', ' ', $payment->metode)) }} · {{ $payment->created_at->translatedFormat('d M Y H:i') }}</div>
                                     </div>
                                 @endforeach
                             </div>
@@ -79,32 +96,159 @@
                     </div>
 
                     {{-- Upload Payment --}}
-                    @if(in_array($booking->status, ['confirmed', 'dp_paid']))
+                    @php
+                        $hasPendingPayment = $booking->payments->where('status', 'pending')->count() > 0;
+                        $dpVerified = $booking->payments->where('jenis', 'dp')->where('status', 'verified')->count() > 0;
+                        $pelunasanVerified = $booking->payments->where('jenis', 'pelunasan')->where('status', 'verified')->count() > 0;
+                        $allowedStatuses = ['confirmed', 'dp_paid', 'paid', 'ongoing'];
+                        $canUpload = in_array($booking->status, $allowedStatuses) && !$hasPendingPayment && !$pelunasanVerified;
+                    @endphp
+
+                    {{-- Status: Pending — Waiting for admin confirmation --}}
+                    @if($booking->status === 'pending')
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex items-center gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                                <span class="text-2xl"><x-heroicon-o-clipboard-document-list class="w-6 h-6 text-blue-400" /></span>
+                                <div>
+                                    <div class="text-sm font-semibold text-blue-400">Menunggu Konfirmasi Admin</div>
+                                    <div class="text-xs text-dark-400 mt-0.5">Booking Anda sedang menunggu konfirmasi dari admin. Anda bisa melakukan pembayaran setelah booking dikonfirmasi.</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Status: Cancelled --}}
+                    @if($booking->status === 'cancelled')
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                                <span class="text-2xl"><x-heroicon-o-x-circle class="w-6 h-6 text-red-400" /></span>
+                                <div>
+                                    <div class="text-sm font-semibold text-red-400">Booking Dibatalkan</div>
+                                    <div class="text-xs text-dark-400 mt-0.5">Booking ini telah dibatalkan. Anda tidak dapat melakukan pembayaran.</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Has pending payment — waiting for verification --}}
+                    @if($hasPendingPayment)
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex items-center gap-3 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                                <span class="text-2xl"><x-heroicon-o-clock class="w-6 h-6 text-yellow-400" /></span>
+                                <div>
+                                    <div class="text-sm font-semibold text-yellow-400">Menunggu Verifikasi</div>
+                                    <div class="text-xs text-dark-400 mt-0.5">Pembayaran Anda sedang diverifikasi oleh admin. Anda tidak dapat mengupload pembayaran baru sampai pembayaran sebelumnya diverifikasi.</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($canUpload)
                         <div class="glass rounded-2xl p-6">
                             <h2 class="font-bold text-lg mb-4">Upload Bukti Pembayaran</h2>
-                            <form method="POST" action="{{ route('customer.booking.payment', $booking) }}" enctype="multipart/form-data" class="space-y-4">
+
+                            {{-- Bank Transfer Info --}}
+                            <div class="mb-5 space-y-3">
+                                <h3 class="text-sm font-medium text-dark-300 mb-2 flex items-center gap-1.5"><x-heroicon-o-credit-card class="w-4 h-4 text-primary-400" /> Rekening Tujuan Transfer</h3>
+                                <div class="space-y-2">
+                                    @foreach($bankAccounts as $bank)
+                                    <div class="bg-dark-800/50 rounded-xl p-4 flex items-center justify-between" x-data>
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-primary-600/20 rounded-lg flex items-center justify-center text-xs font-bold text-primary-400">
+                                                {{ strtoupper(substr($bank->nama_bank, 0, 3)) }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold">{{ $bank->nama_bank }}</div>
+                                                <div class="text-xs text-dark-400 font-mono">{{ $bank->nomor_rekening }}</div>
+                                                <div class="text-xs text-dark-500">a.n. {{ $bank->atas_nama }}</div>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="navigator.clipboard.writeText('{{ $bank->nomor_rekening }}'); $el.textContent = '✓ Copied'" class="text-xs text-primary-400 hover:text-primary-300 transition-colors px-3 py-1.5 rounded-lg bg-primary-500/10 hover:bg-primary-500/20">Copy</button>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{{ route('customer.booking.payment', $booking) }}" enctype="multipart/form-data" class="space-y-4"
+                                x-data="{ fileSelected: false, fileName: '' }">
                                 @csrf
+
+                                {{-- Validation Errors --}}
+                                @if($errors->any())
+                                    <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                                        <div class="text-sm font-semibold text-red-400 mb-2 flex items-center gap-1.5"><x-heroicon-o-exclamation-triangle class="w-4 h-4" /> Terjadi kesalahan:</div>
+                                        <ul class="list-disc list-inside space-y-1">
+                                            @foreach($errors->all() as $error)
+                                                <li class="text-xs text-red-400">{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
                                 <div>
                                     <label class="block text-sm font-medium text-dark-300 mb-2">Jenis Pembayaran</label>
                                     <select name="jenis" class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
-                                        @if($booking->status === 'confirmed')
+                                        @if(!$dpVerified)
                                             <option value="dp">DP (50%)</option>
                                         @endif
-                                        <option value="pelunasan">Pelunasan</option>
+                                        @if($dpVerified)
+                                            <option value="pelunasan">Pelunasan</option>
+                                        @endif
                                     </select>
+                                    @error('jenis') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-dark-300 mb-2">Metode Pembayaran</label>
+                                    <select name="metode" required class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
+                                        <option value="">-- Pilih Bank Tujuan --</option>
+                                        @foreach($bankAccounts as $bank)
+                                            <option value="{{ $bank->kode_bank }}">Transfer {{ $bank->nama_bank }} ({{ $bank->nomor_rekening }})</option>
+                                        @endforeach
+                                    </select>
+                                    @error('metode') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-dark-300 mb-2">Jumlah (Rp)</label>
                                     <input type="number" name="jumlah" required class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors" placeholder="0">
+                                    @error('jumlah') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-dark-300 mb-2">Bukti Transfer</label>
-                                    <input type="file" name="bukti_transfer" accept="image/*" required class="w-full text-sm text-dark-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-500/10 file:text-primary-400 hover:file:bg-primary-500/20">
+                                    <label class="block text-sm font-medium text-dark-300 mb-2">Bukti Transfer <span class="text-red-400">*</span></label>
+                                    <input type="file" name="bukti_transfer" accept="image/*" required
+                                        x-on:change="fileSelected = $event.target.files.length > 0; fileName = $event.target.files.length > 0 ? $event.target.files[0].name : ''"
+                                        class="w-full text-sm text-dark-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-500/10 file:text-primary-400 hover:file:bg-primary-500/20">
+                                    {{-- File selected indicator --}}
+                                    <div x-show="fileSelected" x-transition class="mt-2 flex items-center gap-2 text-xs text-accent-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span x-text="fileName"></span>
+                                    </div>
+                                    <div x-show="!fileSelected" class="mt-2 text-xs text-dark-500 flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        Upload bukti transfer terlebih dahulu untuk mengaktifkan tombol
+                                    </div>
+                                    @error('bukti_transfer') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                                 </div>
-                                <button type="submit" class="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary-500 to-primary-600 text-dark-950 transition-all">
-                                    Upload Pembayaran
+                                <button type="submit" :disabled="!fileSelected"
+                                    class="w-full py-3 rounded-xl text-sm font-bold transition-all"
+                                    :class="fileSelected
+                                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-dark-950 hover:from-primary-400 hover:to-primary-500 shadow-lg shadow-primary-500/25 cursor-pointer'
+                                        : 'bg-dark-700 text-dark-500 cursor-not-allowed'">
+                                    <span x-show="!fileSelected" class="inline-flex items-center gap-1"><x-heroicon-o-lock-closed class="w-4 h-4" /> Upload Bukti Transfer Dulu</span>
+                                    <span x-show="fileSelected" class="inline-flex items-center gap-1"><x-heroicon-o-check-badge class="w-4 h-4" /> Upload Pembayaran</span>
                                 </button>
                             </form>
+                        </div>
+                    @endif
+
+                    @if($pelunasanVerified)
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                                <span class="text-2xl"><x-heroicon-s-sparkles class="w-6 h-6 text-green-400" /></span>
+                                <div>
+                                    <div class="text-sm font-semibold text-green-400">Pembayaran Lunas</div>
+                                    <div class="text-xs text-dark-400 mt-0.5">Semua pembayaran telah terverifikasi. Terima kasih!</div>
+                                </div>
+                            </div>
                         </div>
                     @endif
                 </div>

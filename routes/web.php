@@ -10,6 +10,9 @@ use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PaketController as AdminPaketController;
 use App\Http\Controllers\Admin\KaryawanController as AdminKaryawanController;
+use App\Http\Controllers\Admin\GaleriController as AdminGaleriController;
+use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public ────────────────────────────────────────
@@ -33,6 +36,7 @@ Route::middleware(['auth', 'role:pelanggan'])->prefix('customer')->name('custome
     Route::get('/booking/history', [CustomerController::class, 'bookingHistory'])->name('booking.history');
     Route::get('/booking/{booking}', [CustomerController::class, 'showBooking'])->name('booking.show');
     Route::post('/booking/{booking}/payment', [CustomerController::class, 'uploadPayment'])->name('booking.payment');
+    Route::post('/testimonial/{booking}', [CustomerController::class, 'storeTestimonial'])->name('testimonial.store');
 });
 
 // ── Admin ─────────────────────────────────────────
@@ -55,11 +59,33 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Karyawan
     Route::resource('karyawan', AdminKaryawanController::class);
+
+    // Galeri
+    Route::resource('galeri', AdminGaleriController::class)->except(['show']);
+
+    // Testimonials
+    Route::get('/testimonials', [AdminTestimonialController::class, 'index'])->name('testimonials.index');
+    Route::patch('/testimonials/{testimonial}/toggle', [AdminTestimonialController::class, 'toggleApproval'])->name('testimonials.toggle');
+    Route::delete('/testimonials/{testimonial}', [AdminTestimonialController::class, 'destroy'])->name('testimonials.destroy');
+
+    // Kelola Admin
+    Route::resource('users', AdminUserController::class)->except(['show']);
 });
+
+use App\Http\Controllers\Owner\BankAccountController as OwnerBankAccountController;
+use App\Http\Controllers\Owner\UserController as OwnerUserController;
 
 // ── Owner ─────────────────────────────────────────
 Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->group(function () {
     Route::get('/dashboard', [OwnerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/report', [OwnerController::class, 'report'])->name('report');
+    Route::get('/report/export', [OwnerController::class, 'exportReport'])->name('report.export');
+    
+    // Master Rekening Bank
+    Route::resource('bank-accounts', OwnerBankAccountController::class)->except(['show']);
+    
+    // Kelola Akun Karyawan / Admin
+    Route::resource('users', OwnerUserController::class)->except(['show']);
 });
 
 // ── Karyawan ──────────────────────────────────────
@@ -73,4 +99,5 @@ Route::middleware(['auth', 'role:karyawan'])->prefix('karyawan')->name('karyawan
 // ── API (Date Availability) ──────────────────────
 Route::middleware('auth')->prefix('api')->group(function () {
     Route::post('/check-availability', [CustomerController::class, 'checkAvailability'])->name('api.check-availability');
+    Route::get('/booked-dates', [CustomerController::class, 'getBookedDates'])->name('api.booked-dates');
 });

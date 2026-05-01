@@ -15,6 +15,7 @@
 
     {{-- Leaflet CSS --}}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -22,7 +23,7 @@
 </head>
 <body class="bg-dark-950 text-white font-sans antialiased min-h-screen flex flex-col">
     {{-- Navigation --}}
-    <nav x-data="{ open: false }" class="fixed top-0 w-full z-50 glass transition-all duration-300" id="main-nav">
+    <nav x-data="{ open: false }" class="fixed top-0 w-full z-50 bg-dark-950 border-b border-dark-800 shadow-lg shadow-black/20 transition-all duration-300" id="main-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 lg:h-20">
                 {{-- Logo --}}
@@ -195,6 +196,7 @@
 
     {{-- Leaflet JS --}}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
 
     {{ $scripts ?? '' }}
 </body>

@@ -11,8 +11,8 @@
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div class="animate-fade-in">
-                <span class="inline-block px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-primary-500/10 text-primary-400 border border-primary-500/20 mb-6">
-                    🎉 Layanan Sisingaan Profesional
+                <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase bg-primary-500/10 text-primary-400 border border-primary-500/20 mb-6">
+                    <x-heroicon-s-sparkles class="w-4 h-4" /> Layanan Sisingaan Profesional
                 </span>
 
                 <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-tight mb-6">
@@ -49,7 +49,7 @@
                     <div class="text-xs text-dark-400 mt-1">Tahun Pengalaman</div>
                 </div>
                 <div class="glass rounded-2xl p-5 text-center">
-                    <div class="text-2xl sm:text-3xl font-bold text-gradient">4.9⭐</div>
+                    <div class="flex items-center justify-center gap-1 text-2xl sm:text-3xl font-bold text-gradient">4.9 <x-heroicon-s-star class="w-5 h-5 sm:w-6 sm:h-6 text-primary-400" /></div>
                     <div class="text-xs text-dark-400 mt-1">Rating Pelanggan</div>
                 </div>
             </div>
@@ -72,20 +72,32 @@
                     <div class="glass rounded-2xl overflow-hidden group hover:-translate-y-2 transition-all duration-300 flex flex-col">
                         {{-- Image placeholder --}}
                         <div class="h-48 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center">
-                            <div class="text-6xl">🦁</div>
+                            <x-heroicon-s-trophy class="w-16 h-16 text-primary-400/60" />
                         </div>
 
                         <div class="p-6 flex flex-col flex-1">
                             <h3 class="text-lg font-bold mb-2">{{ $paket->nama }}</h3>
                             <p class="text-sm text-dark-400 mb-4 flex-1">{{ $paket->deskripsi }}</p>
 
+                            {{-- Daftar Isi Paket --}}
+                            @if($paket->daftar_isi && count($paket->daftar_isi) > 0)
+                                <div class="space-y-1.5 mb-4">
+                                    @foreach($paket->daftar_isi as $item)
+                                        <div class="flex items-center gap-2 text-sm text-dark-300">
+                                            <x-heroicon-s-check-circle class="w-4 h-4 text-accent-400 shrink-0" />
+                                            {{ $item }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
                             <div class="space-y-2 mb-5">
                                 <div class="flex items-center gap-2 text-sm text-dark-300">
-                                    <svg class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <x-heroicon-o-user-group class="w-4 h-4 text-primary-400" />
                                     {{ $paket->jumlah_pemain }} Pemain
                                 </div>
                                 <div class="flex items-center gap-2 text-sm text-dark-300">
-                                    <svg class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <x-heroicon-o-clock class="w-4 h-4 text-primary-400" />
                                     {{ $paket->durasi }}
                                 </div>
                             </div>
@@ -120,17 +132,22 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 @php
                     $steps = [
-                        ['icon' => '📝', 'title' => 'Daftar & Login', 'desc' => 'Buat akun gratis dan login ke sistem SIGANTARA'],
-                        ['icon' => '📦', 'title' => 'Pilih Paket', 'desc' => 'Pilih paket sisingaan sesuai kebutuhan acara Anda'],
-                        ['icon' => '📍', 'title' => 'Tentukan Lokasi', 'desc' => 'Pilih tanggal, jam, dan lokasi acara via peta GPS'],
-                        ['icon' => '✅', 'title' => 'Konfirmasi & Bayar', 'desc' => 'Admin akan mengkonfirmasi dan Anda upload bukti bayar'],
+                        ['icon' => 'pencil-square', 'title' => 'Daftar & Login', 'desc' => 'Buat akun gratis dan login ke sistem SIGANTARA'],
+                        ['icon' => 'cube', 'title' => 'Pilih Paket', 'desc' => 'Pilih paket sisingaan sesuai kebutuhan acara Anda'],
+                        ['icon' => 'map-pin', 'title' => 'Tentukan Lokasi', 'desc' => 'Pilih tanggal, jam, dan lokasi acara via peta GPS'],
+                        ['icon' => 'check-badge', 'title' => 'Konfirmasi & Bayar', 'desc' => 'Admin akan mengkonfirmasi dan Anda upload bukti bayar'],
                     ];
                 @endphp
 
                 @foreach($steps as $i => $step)
                     <div class="relative text-center group">
-                        <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-primary-500/10 to-accent-500/10 border border-primary-500/10 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
-                            {{ $step['icon'] }}
+                        <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-primary-500/10 to-accent-500/10 border border-primary-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            @switch($step['icon'])
+                                @case('pencil-square') <x-heroicon-o-pencil-square class="w-9 h-9 text-primary-400" /> @break
+                                @case('cube') <x-heroicon-o-cube class="w-9 h-9 text-primary-400" /> @break
+                                @case('map-pin') <x-heroicon-o-map-pin class="w-9 h-9 text-primary-400" /> @break
+                                @case('check-badge') <x-heroicon-o-check-badge class="w-9 h-9 text-primary-400" /> @break
+                            @endswitch
                         </div>
                         <span class="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary-500 text-dark-950 text-sm font-bold flex items-center justify-center shadow-lg">{{ $i + 1 }}</span>
                         <h3 class="text-lg font-bold mb-2">{{ $step['title'] }}</h3>
@@ -153,28 +170,60 @@
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                @php
-                    $galeriPlaceholders = [
-                        ['title' => 'Sunatan Anak', 'emoji' => '🎊'],
-                        ['title' => 'Arak-arakan', 'emoji' => '🎵'],
-                        ['title' => 'Pencak Silat', 'emoji' => '🥋'],
-                        ['title' => 'Sisingaan Meriah', 'emoji' => '🦁'],
-                        ['title' => 'Dekorasi Mewah', 'emoji' => '🎨'],
-                        ['title' => 'Penari Profesional', 'emoji' => '💃'],
-                        ['title' => 'Musik Dogdog', 'emoji' => '🥁'],
-                        ['title' => 'Acara Budaya', 'emoji' => '🏮'],
-                    ];
-                @endphp
-                @foreach($galeriPlaceholders as $item)
-                    <div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
-                        <div class="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center">
-                            <span class="text-5xl group-hover:scale-125 transition-transform duration-300">{{ $item['emoji'] }}</span>
+                @if($galeris->count() > 0)
+                    @foreach($galeris as $galeri)
+                        <div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
+                            @if($galeri->gambar)
+                                <img src="{{ Storage::url($galeri->gambar) }}" alt="{{ $galeri->judul }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                            @else
+                                <div class="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center">
+                                    <x-heroicon-o-photo class="w-12 h-12 text-primary-400/40" />
+                                </div>
+                            @endif
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                                <div>
+                                    <span class="text-sm font-semibold text-white">{{ $galeri->judul }}</span>
+                                    @if($galeri->deskripsi)
+                                        <p class="text-xs text-dark-300 mt-1">{{ Str::limit($galeri->deskripsi, 60) }}</p>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                            <span class="text-sm font-semibold text-white">{{ $item['title'] }}</span>
+                    @endforeach
+                @else
+                    {{-- Fallback when no galeri entries --}}
+                    @php
+                        $galeriPlaceholders = [
+                            ['title' => 'Sunatan Anak', 'icon' => 'sparkles'],
+                            ['title' => 'Arak-arakan', 'icon' => 'musical-note'],
+                            ['title' => 'Pencak Silat', 'icon' => 'fire'],
+                            ['title' => 'Sisingaan Meriah', 'icon' => 'trophy'],
+                            ['title' => 'Dekorasi Mewah', 'icon' => 'paint-brush'],
+                            ['title' => 'Penari Profesional', 'icon' => 'user-group'],
+                            ['title' => 'Musik Dogdog', 'icon' => 'speaker-wave'],
+                            ['title' => 'Acara Budaya', 'icon' => 'building-library'],
+                        ];
+                    @endphp
+                    @foreach($galeriPlaceholders as $item)
+                        <div class="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center">
+                                @switch($item['icon'])
+                                    @case('sparkles') <x-heroicon-o-sparkles class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                    @case('musical-note') <x-heroicon-o-musical-note class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                    @case('fire') <x-heroicon-o-fire class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                    @case('trophy') <x-heroicon-o-trophy class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                    @case('paint-brush') <x-heroicon-o-paint-brush class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                    @case('user-group') <x-heroicon-o-user-group class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                    @case('speaker-wave') <x-heroicon-o-speaker-wave class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                    @case('building-library') <x-heroicon-o-building-library class="w-12 h-12 text-primary-400/50 group-hover:scale-125 transition-transform duration-300" /> @break
+                                @endswitch
+                            </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-dark-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                                <span class="text-sm font-semibold text-white">{{ $item['title'] }}</span>
+                            </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                @endif
             </div>
         </div>
     </section>
@@ -190,33 +239,36 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                @php
-                    $testimonials = [
-                        ['name' => 'Ibu Siti Aminah', 'event' => 'Sunatan Anak', 'text' => 'Pelayanan sangat memuaskan! Arak-arakan sisingaan nya meriah sekali, anak saya sangat senang. Recommended banget!', 'rating' => 5],
-                        ['name' => 'Bapak Hendra', 'event' => 'Acara Sunatan', 'text' => 'Sudah 3 kali pakai jasa Alan Group, selalu puas. Pemainnya profesional dan tepat waktu. Harga juga bersahabat.', 'rating' => 5],
-                        ['name' => 'Ibu Rina Wati', 'event' => 'Festival Budaya', 'text' => 'Tampil di acara festival kami, penampilannya sangat memukau. Dekorasi dan kostumnya bagus-bagus. Terima kasih!', 'rating' => 5],
-                    ];
-                @endphp
-
-                @foreach($testimonials as $testi)
-                    <div class="glass rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300">
-                        <div class="flex items-center gap-1 mb-4">
-                            @for($i = 0; $i < $testi['rating']; $i++)
-                                <svg class="w-4 h-4 text-primary-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            @endfor
-                        </div>
-                        <p class="text-dark-300 text-sm leading-relaxed mb-5 italic">"{{ $testi['text'] }}"</p>
-                        <div class="flex items-center gap-3 border-t border-dark-700 pt-4">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-dark-950 font-bold text-sm">
-                                {{ strtoupper(substr($testi['name'], 0, 1)) }}
+                @if($testimonials->count() > 0)
+                    @foreach($testimonials as $testi)
+                        <div class="glass rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300">
+                            <div class="flex items-center gap-1 mb-4">
+                                @for($i = 0; $i < $testi->rating; $i++)
+                                    <x-heroicon-s-star class="w-4 h-4 text-primary-400" />
+                                @endfor
+                                @for($i = $testi->rating; $i < 5; $i++)
+                                    <x-heroicon-o-star class="w-4 h-4 text-dark-600" />
+                                @endfor
                             </div>
-                            <div>
-                                <div class="text-sm font-semibold">{{ $testi['name'] }}</div>
-                                <div class="text-xs text-dark-500">{{ $testi['event'] }}</div>
+                            <p class="text-dark-300 text-sm leading-relaxed mb-5 italic">"{{ $testi->deskripsi }}"</p>
+                            <div class="flex items-center gap-3 border-t border-dark-700 pt-4">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-dark-950 font-bold text-sm">
+                                    {{ strtoupper(substr($testi->user->name, 0, 1)) }}
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold">{{ $testi->user->name }}</div>
+                                    <div class="text-xs text-dark-500">{{ $testi->booking->nama_acara }}</div>
+                                </div>
                             </div>
                         </div>
+                    @endforeach
+                @else
+                    {{-- Fallback when no testimonials --}}
+                    <div class="col-span-full text-center py-12">
+                        <x-heroicon-o-chat-bubble-bottom-center-text class="w-16 h-16 text-dark-600 mx-auto mb-4" />
+                        <p class="text-dark-400">Belum ada testimoni. Jadilah yang pertama memberikan ulasan!</p>
                     </div>
-                @endforeach
+                @endif
             </div>
         </div>
     </section>
@@ -238,4 +290,5 @@
             </div>
         </div>
     </section>
+
 </x-layout>

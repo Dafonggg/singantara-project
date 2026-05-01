@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nama', 'deskripsi', 'harga', 'jumlah_pemain', 'durasi', 'gambar', 'is_active'])]
+#[Fillable(['nama', 'deskripsi', 'harga', 'jumlah_pemain', 'durasi', 'daftar_isi', 'gambar', 'is_active'])]
 class Paket extends Model
 {
     protected function casts(): array
@@ -14,6 +14,7 @@ class Paket extends Model
         return [
             'harga' => 'decimal:2',
             'is_active' => 'boolean',
+            'daftar_isi' => 'array',
         ];
     }
 

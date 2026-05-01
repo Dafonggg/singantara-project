@@ -34,7 +34,13 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $booking->load(['user', 'paket', 'payments', 'jadwals.karyawan']);
-        $karyawans = User::where('role', 'karyawan')->where('status', 'active')->get();
+
+        // Exclude already-assigned karyawans from dropdown
+        $assignedIds = $booking->jadwals->pluck('karyawan_id');
+        $karyawans = User::where('role', 'karyawan')
+            ->where('status', 'active')
+            ->whereNotIn('id', $assignedIds)
+            ->get();
 
         return view('admin.bookings.show', compact('booking', 'karyawans'));
     }
@@ -54,6 +60,15 @@ class BookingController extends Controller
             'karyawan_id' => 'required|exists:users,id',
             'peran' => 'nullable|string|max:100',
         ]);
+
+        // Prevent assigning the same employee twice
+        $existing = Jadwal::where('booking_id', $booking->id)
+            ->where('karyawan_id', $request->karyawan_id)
+            ->exists();
+
+        if ($existing) {
+            return back()->with('error', 'Karyawan ini sudah ditugaskan ke booking ini.');
+        }
 
         Jadwal::create([
             'booking_id' => $booking->id,

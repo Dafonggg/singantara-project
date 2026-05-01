@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
 class OwnerController extends Controller
 {
@@ -36,5 +38,72 @@ class OwnerController extends Controller
         }
 
         return view('owner.dashboard', compact('stats', 'recentBookings', 'monthlyRevenue'));
+    }
+
+    /**
+     * Revenue report with date range filter.
+     */
+    public function report(Request $request)
+    {
+        $dariTanggal = $request->dari_tanggal;
+        $sampaiTanggal = $request->sampai_tanggal;
+
+        $query = Payment::with(['booking.user', 'booking.paket'])
+            ->where('status', 'verified');
+
+        if ($dariTanggal) {
+            $query->whereDate('verified_at', '>=', $dariTanggal);
+        }
+
+        if ($sampaiTanggal) {
+            $query->whereDate('verified_at', '<=', $sampaiTanggal);
+        }
+
+        $payments = $query->latest('verified_at')->get();
+
+        $summary = [
+            'total_pendapatan' => $payments->sum('jumlah'),
+            'jumlah_transaksi' => $payments->count(),
+            'total_dp' => $payments->where('jenis', 'dp')->sum('jumlah'),
+            'total_pelunasan' => $payments->where('jenis', 'pelunasan')->sum('jumlah'),
+        ];
+
+        return view('owner.report', compact('payments', 'summary', 'dariTanggal', 'sampaiTanggal'));
+    }
+
+    /**
+     * Export revenue report as PDF.
+     */
+    public function exportReport(Request $request)
+    {
+        $dariTanggal = $request->dari_tanggal;
+        $sampaiTanggal = $request->sampai_tanggal;
+
+        $query = Payment::with(['booking.user', 'booking.paket'])
+            ->where('status', 'verified');
+
+        if ($dariTanggal) {
+            $query->whereDate('verified_at', '>=', $dariTanggal);
+        }
+
+        if ($sampaiTanggal) {
+            $query->whereDate('verified_at', '<=', $sampaiTanggal);
+        }
+
+        $payments = $query->latest('verified_at')->get();
+
+        $summary = [
+            'total_pendapatan' => $payments->sum('jumlah'),
+            'jumlah_transaksi' => $payments->count(),
+            'total_dp' => $payments->where('jenis', 'dp')->sum('jumlah'),
+            'total_pelunasan' => $payments->where('jenis', 'pelunasan')->sum('jumlah'),
+        ];
+
+        $filename = 'laporan_pendapatan_' . ($dariTanggal ?? 'all') . '_' . ($sampaiTanggal ?? 'all') . '.pdf';
+
+        $pdf = Pdf::loadView('owner.report-pdf', compact('payments', 'summary', 'dariTanggal', 'sampaiTanggal'));
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
     }
 }

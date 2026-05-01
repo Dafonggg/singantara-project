@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Paket;
 use App\Models\Payment;
+use App\Models\Testimonial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +22,60 @@ class CustomerController extends Controller
         $totalBookings = $user->bookings()->count();
         $activeBookings = $user->bookings()->whereNotIn('status', ['completed', 'cancelled'])->count();
 
-        return view('customer.dashboard', compact('bookings', 'totalBookings', 'activeBookings'));
+        // Completed bookings that don't have a testimonial yet
+        $completedBookingsWithoutTestimonial = $user->bookings()
+            ->with('paket')
+            ->where('status', 'completed')
+            ->whereDoesntHave('testimonial')
+            ->get();
+
+        // User's existing testimonials
+        $myTestimonials = $user->testimonials()
+            ->with('booking.paket')
+            ->latest()
+            ->get();
+
+        return view('customer.dashboard', compact(
+            'bookings',
+            'totalBookings',
+            'activeBookings',
+            'completedBookingsWithoutTestimonial',
+            'myTestimonials'
+        ));
+    }
+
+    /**
+     * Store testimonial for a completed booking.
+     */
+    public function storeTestimonial(Request $request, Booking $booking)
+    {
+        if ($booking->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($booking->status !== 'completed') {
+            return back()->with('error', 'Testimoni hanya bisa diberikan untuk booking yang sudah selesai.');
+        }
+
+        // Prevent duplicate
+        if ($booking->testimonial) {
+            return back()->with('error', 'Anda sudah memberikan testimoni untuk booking ini.');
+        }
+
+        $validated = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'deskripsi' => 'required|string|max:1000',
+        ]);
+
+        Testimonial::create([
+            'user_id' => Auth::id(),
+            'booking_id' => $booking->id,
+            'rating' => $validated['rating'],
+            'deskripsi' => $validated['deskripsi'],
+            'is_approved' => false,
+        ]);
+
+        return back()->with('success', 'Terima kasih! Testimoni Anda berhasil dikirim dan menunggu persetujuan admin.');
     }
 
     /**
@@ -46,16 +100,30 @@ class CustomerController extends Controller
             ->whereNotIn('status', ['cancelled'])
             ->count();
 
-        // Max 3 bookings per day
-        $available = $bookingsOnDate < 3;
+        // Max 1 booking per day
+        $available = $bookingsOnDate < 1;
 
         return response()->json([
             'available' => $available,
             'count' => $bookingsOnDate,
             'message' => $available
-                ? "Tanggal tersedia! ({$bookingsOnDate}/3 booking)"
-                : 'Tanggal sudah penuh (3/3 booking)',
+                ? 'Tanggal tersedia!'
+                : 'Tanggal sudah dibooking oleh pelanggan lain.',
         ]);
+    }
+
+    /**
+     * Get all booked dates (for disabling in calendar picker).
+     */
+    public function getBookedDates()
+    {
+        $bookedDates = Booking::whereNotIn('status', ['cancelled'])
+            ->where('tanggal_acara', '>=', now()->toDateString())
+            ->pluck('tanggal_acara')
+            ->map(fn($date) => $date->format('Y-m-d'))
+            ->values();
+
+        return response()->json(['booked_dates' => $bookedDates]);
     }
 
     /**
@@ -73,6 +141,15 @@ class CustomerController extends Controller
             'longitude' => 'nullable|numeric',
             'catatan' => 'nullable|string|max:1000',
         ]);
+
+        // Server-side: enforce max 1 booking per day
+        $existingBooking = Booking::where('tanggal_acara', $validated['tanggal_acara'])
+            ->whereNotIn('status', ['cancelled'])
+            ->exists();
+
+        if ($existingBooking) {
+            return back()->withErrors(['tanggal_acara' => 'Tanggal sudah dibooking oleh pelanggan lain.'])->withInput();
+        }
 
         $paket = Paket::findOrFail($validated['paket_id']);
 
@@ -100,14 +177,17 @@ class CustomerController extends Controller
      */
     public function showBooking(Booking $booking)
     {
-        // Ensure user can only see their own bookings
-        if ($booking->user_id !== Auth::id()) {
+        if ($booking->user_id !== auth()->id()) {
             abort(403);
         }
 
-        $booking->load(['paket', 'payments', 'jadwals.karyawan']);
+        $booking->load(['paket', 'payments' => function ($q) {
+            $q->latest();
+        }]);
 
-        return view('customer.booking.show', compact('booking'));
+        $bankAccounts = \App\Models\BankAccount::active()->get();
+
+        return view('customer.booking.show', compact('booking', 'bankAccounts'));
     }
 
     /**
@@ -132,18 +212,52 @@ class CustomerController extends Controller
             abort(403);
         }
 
+        // Only allow payment upload for confirmed bookings
+        $allowedStatuses = ['confirmed', 'dp_paid', 'paid', 'ongoing'];
+        if (!in_array($booking->status, $allowedStatuses)) {
+            return back()->with('error', 'Pembayaran hanya bisa dilakukan setelah booking dikonfirmasi oleh admin.');
+        }
+
+        // Prevent double payment: check if there's already a pending payment
+        $hasPendingPayment = $booking->payments()->where('status', 'pending')->exists();
+        if ($hasPendingPayment) {
+            return back()->with('error', 'Anda masih memiliki pembayaran yang menunggu verifikasi. Silakan tunggu hingga admin memverifikasi.');
+        }
+
         $validated = $request->validate([
             'jenis' => 'required|in:dp,pelunasan',
-            'jumlah' => 'required|numeric|min:1',
-            'bukti_transfer' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'jumlah' => 'required|numeric|min:10000',
+            'metode' => 'required|exists:bank_accounts,kode_bank',
+            'bukti_transfer' => 'required|image|mimes:jpg,jpeg,png,webp,heic,heif|max:5120',
         ]);
+
+        // Prevent duplicate DP: check if DP already verified
+        if ($validated['jenis'] === 'dp') {
+            $dpVerified = $booking->payments()->where('jenis', 'dp')->where('status', 'verified')->exists();
+            if ($dpVerified) {
+                return back()->with('error', 'DP sudah dibayar dan terverifikasi.');
+            }
+        }
+
+        // Prevent duplicate pelunasan: check if pelunasan already verified
+        if ($validated['jenis'] === 'pelunasan') {
+            $pelunasanVerified = $booking->payments()->where('jenis', 'pelunasan')->where('status', 'verified')->exists();
+            if ($pelunasanVerified) {
+                return back()->with('error', 'Pelunasan sudah dibayar dan terverifikasi.');
+            }
+            // Pelunasan can only be done after DP is verified
+            $dpVerified = $booking->payments()->where('jenis', 'dp')->where('status', 'verified')->exists();
+            if (!$dpVerified) {
+                return back()->with('error', 'DP harus diverifikasi terlebih dahulu sebelum melakukan pelunasan.');
+            }
+        }
 
         $path = $request->file('bukti_transfer')->store('payments', 'public');
 
         Payment::create([
             'booking_id' => $booking->id,
             'jenis' => $validated['jenis'],
-            'metode' => 'transfer',
+            'metode' => $validated['metode'],
             'jumlah' => $validated['jumlah'],
             'bukti_transfer' => $path,
             'status' => 'pending',

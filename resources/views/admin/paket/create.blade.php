@@ -5,7 +5,8 @@
             <h1 class="text-2xl font-bold mt-2 mb-6">Tambah Paket Baru</h1>
 
             <div class="glass rounded-2xl p-6">
-                <form method="POST" action="{{ route('admin.paket.store') }}" enctype="multipart/form-data" class="space-y-5">
+                <form method="POST" action="{{ route('admin.paket.store') }}" enctype="multipart/form-data" class="space-y-5"
+                    x-data="{ items: [''] }">
                     @csrf
                     <div>
                         <label class="block text-sm font-medium text-dark-300 mb-2">Nama Paket</label>
@@ -30,6 +31,30 @@
                         <label class="block text-sm font-medium text-dark-300 mb-2">Durasi</label>
                         <input type="text" name="durasi" value="{{ old('durasi') }}" placeholder="Contoh: 3-4 jam" class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
                     </div>
+
+                    {{-- Daftar Isi Paket --}}
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Daftar Isi Paket</label>
+                        <p class="text-xs text-dark-500 mb-3">Tambahkan item yang termasuk dalam paket ini.</p>
+                        <div class="space-y-2">
+                            <template x-for="(item, index) in items" :key="index">
+                                <div class="flex items-center gap-2">
+                                    <input type="text" :name="'daftar_isi[' + index + ']'" x-model="items[index]"
+                                        placeholder="Contoh: 4 Sisingaan, Musik Dogdog"
+                                        class="flex-1 px-4 py-2.5 rounded-xl bg-dark-800/50 border border-dark-700 text-white text-sm focus:outline-none focus:border-primary-500 transition-colors">
+                                    <button type="button" @click="items.splice(index, 1)" x-show="items.length > 1"
+                                        class="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
+                                        <x-heroicon-o-x-mark class="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                        <button type="button" @click="items.push('')"
+                            class="mt-2 inline-flex items-center gap-1.5 text-sm text-primary-400 hover:text-primary-300 transition-colors">
+                            <x-heroicon-o-plus-circle class="w-4 h-4" /> Tambah Item
+                        </button>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-dark-300 mb-2">Gambar</label>
                         <input type="file" name="gambar" accept="image/*" class="w-full text-sm text-dark-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-500/10 file:text-primary-400">
