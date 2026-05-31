@@ -13,6 +13,7 @@
                 <table class="w-full">
                     <thead><tr class="border-b border-dark-700">
                         <th class="text-left text-xs font-semibold text-dark-400 uppercase px-5 py-4">Nama</th>
+                        <th class="text-left text-xs font-semibold text-dark-400 uppercase px-5 py-4">Peran</th>
                         <th class="text-left text-xs font-semibold text-dark-400 uppercase px-5 py-4">Email</th>
                         <th class="text-left text-xs font-semibold text-dark-400 uppercase px-5 py-4">Telepon</th>
                         <th class="text-left text-xs font-semibold text-dark-400 uppercase px-5 py-4">Status</th>
@@ -21,7 +22,11 @@
                     <tbody class="divide-y divide-dark-800">
                         @foreach($karyawans as $k)
                             <tr class="hover:bg-white/5">
-                                <td class="px-5 py-4 text-sm font-semibold">{{ $k->name }}</td>
+                                <td class="px-5 py-4 text-sm font-semibold">
+                                    {{ $k->name }}
+                                    <div class="text-xs text-dark-500 font-normal">&#64;{{ $k->username }}</div>
+                                </td>
+                                <td class="px-5 py-4 text-sm text-dark-300 font-medium">{{ $k->peran ?? '-' }}</td>
                                 <td class="px-5 py-4 text-sm text-dark-400">{{ $k->email }}</td>
                                 <td class="px-5 py-4 text-sm">{{ $k->phone ?? '-' }}</td>
                                 <td class="px-5 py-4"><span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $k->status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400' }}">{{ ucfirst($k->status) }}</span></td>

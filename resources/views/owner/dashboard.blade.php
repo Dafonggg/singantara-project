@@ -7,9 +7,7 @@
                     <p class="text-dark-400 mt-1">Overview bisnis SIGANTARA</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('owner.users.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-dark-800/80 text-dark-300 border border-dark-700 hover:bg-dark-700 hover:text-white transition-all">
-                        <x-heroicon-o-user-group class="w-4 h-4" /> Kelola Staf
-                    </a>
+
                     <a href="{{ route('owner.bank-accounts.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-dark-800/80 text-dark-300 border border-dark-700 hover:bg-dark-700 hover:text-white transition-all">
                         <x-heroicon-o-credit-card class="w-4 h-4" /> Rekening Bank
                     </a>

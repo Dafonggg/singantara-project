@@ -4,7 +4,10 @@
             <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <a href="{{ route('owner.dashboard') }}" class="text-sm text-dark-400 hover:text-primary-400 transition-colors">← Kembali ke Dashboard</a>
-                    <h1 class="text-2xl sm:text-3xl font-bold mt-2">📊 Laporan Pendapatan</h1>
+                    <h1 class="text-2xl sm:text-3xl font-bold mt-2 flex items-center gap-2">
+                        <x-heroicon-o-chart-bar class="w-7 h-7 text-primary-400" />
+                        Laporan Pendapatan
+                    </h1>
                     <p class="text-dark-400 mt-1">Filter data pembayaran berdasarkan periode</p>
                 </div>
             </div>
@@ -23,8 +26,9 @@
                             class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
                     </div>
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button type="submit" class="flex-1 sm:flex-none px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary-500 to-primary-600 text-dark-950 hover:from-primary-400 hover:to-primary-500 transition-all">
-                            🔍 Filter
+                        <button type="submit" class="flex-1 sm:flex-none px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary-500 to-primary-600 text-dark-950 hover:from-primary-400 hover:to-primary-500 transition-all flex items-center justify-center gap-2">
+                            <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                            Filter
                         </button>
                         <a href="{{ route('owner.report') }}" class="flex-1 sm:flex-none px-6 py-3 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-dark-500 transition-all text-center">
                             Reset
@@ -36,22 +40,22 @@
             {{-- Summary Cards --}}
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div class="glass rounded-2xl p-5">
-                    <div class="text-2xl mb-2">💰</div>
+                    <div class="mb-2"><x-heroicon-o-currency-dollar class="w-6 h-6 text-primary-400" /></div>
                     <div class="text-xl font-bold text-gradient">Rp {{ number_format($summary['total_pendapatan'], 0, ',', '.') }}</div>
                     <div class="text-sm text-dark-400 mt-1">Total Pendapatan</div>
                 </div>
                 <div class="glass rounded-2xl p-5">
-                    <div class="text-2xl mb-2">📋</div>
+                    <div class="mb-2"><x-heroicon-o-clipboard-document-list class="w-6 h-6 text-primary-400" /></div>
                     <div class="text-xl font-bold">{{ $summary['jumlah_transaksi'] }}</div>
                     <div class="text-sm text-dark-400 mt-1">Jumlah Transaksi</div>
                 </div>
                 <div class="glass rounded-2xl p-5">
-                    <div class="text-2xl mb-2">💵</div>
+                    <div class="mb-2"><x-heroicon-o-credit-card class="w-6 h-6 text-blue-400" /></div>
                     <div class="text-xl font-bold text-blue-400">Rp {{ number_format($summary['total_dp'], 0, ',', '.') }}</div>
                     <div class="text-sm text-dark-400 mt-1">Total DP</div>
                 </div>
                 <div class="glass rounded-2xl p-5">
-                    <div class="text-2xl mb-2">✅</div>
+                    <div class="mb-2"><x-heroicon-o-check-circle class="w-6 h-6 text-green-400" /></div>
                     <div class="text-xl font-bold text-green-400">Rp {{ number_format($summary['total_pelunasan'], 0, ',', '.') }}</div>
                     <div class="text-sm text-dark-400 mt-1">Total Pelunasan</div>
                 </div>
@@ -114,7 +118,9 @@
                     </div>
                 @else
                     <div class="p-12 text-center">
-                        <div class="text-4xl mb-3">📭</div>
+                        <div class="flex justify-center mb-3">
+                            <x-heroicon-o-inbox class="w-12 h-12 text-dark-600" />
+                        </div>
                         <p class="text-dark-400">Tidak ada data pembayaran untuk periode ini.</p>
                     </div>
                 @endif

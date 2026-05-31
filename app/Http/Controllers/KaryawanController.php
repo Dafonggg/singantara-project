@@ -56,10 +56,19 @@ class KaryawanController extends Controller
             abort(403);
         }
 
-        $request->validate(['status_hadir' => 'required|in:hadir,tidak_hadir']);
+        $request->validate([
+            'status_hadir' => 'required|in:hadir,tidak_hadir',
+            'catatan' => 'required_if:status_hadir,tidak_hadir|nullable|string|max:500',
+        ], [
+            'catatan.required_if' => 'Catatan alasan wajib diisi jika Anda memilih tidak bersedia.',
+        ]);
 
-        $jadwal->update(['status_hadir' => $request->status_hadir]);
+        $jadwal->update([
+            'status_hadir' => $request->status_hadir,
+            'catatan' => $request->status_hadir === 'tidak_hadir' ? $request->catatan : null,
+        ]);
 
-        return back()->with('success', 'Status kehadiran berhasil diupdate.');
+        $statusLabel = $request->status_hadir === 'hadir' ? 'Bersedia' : 'Tidak Bersedia';
+        return back()->with('success', "Konfirmasi kesediaan berhasil dikirim: {$statusLabel}.");
     }
 }

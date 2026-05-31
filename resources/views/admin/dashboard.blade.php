@@ -50,9 +50,7 @@
                 <a href="{{ route('admin.testimonials.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
                     <x-heroicon-o-chat-bubble-bottom-center-text class="w-4 h-4" /> Testimoni
                 </a>
-                <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-primary-500 hover:text-primary-400 transition-all">
-                    <x-heroicon-o-shield-check class="w-4 h-4" /> Kelola Admin
-                </a>
+
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

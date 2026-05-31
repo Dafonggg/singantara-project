@@ -68,8 +68,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/testimonials/{testimonial}/toggle', [AdminTestimonialController::class, 'toggleApproval'])->name('testimonials.toggle');
     Route::delete('/testimonials/{testimonial}', [AdminTestimonialController::class, 'destroy'])->name('testimonials.destroy');
 
-    // Kelola Admin
-    Route::resource('users', AdminUserController::class)->except(['show']);
+
 });
 
 use App\Http\Controllers\Owner\BankAccountController as OwnerBankAccountController;
@@ -84,8 +83,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     // Master Rekening Bank
     Route::resource('bank-accounts', OwnerBankAccountController::class)->except(['show']);
     
-    // Kelola Akun Karyawan / Admin
-    Route::resource('users', OwnerUserController::class)->except(['show']);
+
 });
 
 // ── Karyawan ──────────────────────────────────────

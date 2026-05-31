@@ -109,6 +109,87 @@
             .dot-available { background: rgba(245,166,35,0.5); border: 1px solid rgba(245,166,35,0.8); }
             .dot-booked { background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.3); text-decoration: line-through; }
             .dot-past { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+
+            /* ── Leaflet Geocoder & Map Customization ── */
+            .leaflet-control-geocoder {
+                background: #111122 !important;
+                border: 1px solid rgba(255,255,255,0.12) !important;
+                border-radius: 0.5rem !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+            }
+            .leaflet-control-geocoder-form input {
+                background-color: transparent !important;
+                color: #ffffff !important;
+                font-family: 'Poppins', sans-serif !important;
+                font-size: 0.875rem !important;
+                border: none !important;
+                outline: none !important;
+                padding: 6px 10px !important;
+            }
+            .leaflet-control-geocoder-form input::placeholder {
+                color: rgba(255, 255, 255, 0.4) !important;
+            }
+            .leaflet-control-geocoder-icon {
+                filter: invert(1) !important;
+                background-color: transparent !important;
+            }
+            .leaflet-control-geocoder-throbber {
+                filter: invert(1) !important;
+            }
+            .leaflet-control-geocoder-alternatives {
+                background-color: #111122 !important;
+                border: 1px solid rgba(255,255,255,0.12) !important;
+                border-radius: 0.5rem !important;
+                margin-top: 4px !important;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7) !important;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            .leaflet-control-geocoder-alternatives li {
+                border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+            }
+            .leaflet-control-geocoder-alternatives li:last-child {
+                border-bottom: none !important;
+            }
+            .leaflet-control-geocoder-alternatives a {
+                color: #e0e0e0 !important;
+                font-family: 'Poppins', sans-serif !important;
+                font-size: 0.8rem !important;
+                text-decoration: none !important;
+                display: block !important;
+                padding: 0.5rem 0.75rem !important;
+                transition: all 0.2s ease !important;
+            }
+            .leaflet-control-geocoder-alternatives a:hover,
+            .leaflet-control-geocoder-alternatives .leaflet-highlighted {
+                background-color: rgba(245,166,35,0.15) !important;
+                color: #f5a623 !important;
+            }
+            
+            /* Leaflet zoom controls */
+            .leaflet-bar {
+                border: 1px solid rgba(255,255,255,0.12) !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+            }
+            .leaflet-bar a {
+                background-color: #111122 !important;
+                color: #ffffff !important;
+                border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+            }
+            .leaflet-bar a:hover {
+                background-color: rgba(245,166,35,0.15) !important;
+                color: #f5a623 !important;
+            }
+            .leaflet-bar a.leaflet-disabled {
+                background-color: #0d0d1a !important;
+                color: rgba(255,255,255,0.2) !important;
+            }
+
+            /* SVG sizes fallback */
+            svg.w-3\.5, svg[class*="w-3.5"] { width: 14px !important; height: 14px !important; }
+            svg.w-4, svg[class*="w-4"] { width: 16px !important; height: 16px !important; }
+            svg.w-5, svg[class*="w-5"] { width: 20px !important; height: 20px !important; }
+            svg.w-8, svg[class*="w-8"] { width: 32px !important; height: 32px !important; }
         </style>
     </x-slot:head>
 
@@ -205,11 +286,37 @@
                     <h2 class="text-lg font-bold flex items-center gap-2"><x-heroicon-o-map-pin class="w-5 h-5 text-primary-400" /> Lokasi Acara</h2>
 
                     <div>
-                        <label class="block text-sm font-medium text-dark-300 mb-2">Alamat Lengkap</label>
-                        <textarea name="alamat" x-model="form.alamat" rows="3" required
-                            class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white placeholder-dark-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors resize-none"
-                            placeholder="Masukkan alamat lengkap acara"></textarea>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Provinsi, Kota, Kecamatan, Kode Pos</label>
+                        <div class="relative flex items-center">
+                            <input type="text" name="alamat" x-model="form.alamat" :readonly="isAddressReadonly" required
+                                placeholder="Pilih lokasi pada peta di bawah..."
+                                class="w-full px-4 py-3 rounded-xl border text-white focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
+                                :class="isAddressReadonly ? 'bg-dark-800/80 text-dark-400 border-dark-600 pr-20 cursor-not-allowed' : 'bg-dark-800/35 border-dark-700 text-white'">
+                            
+                            <template x-if="form.alamat">
+                                <button type="button" @click="confirmChangeAddress()"
+                                    class="absolute right-3 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary-500/10 text-primary-400 border border-primary-500/20 hover:bg-primary-500/20 transition-all">
+                                    <span x-text="isAddressReadonly ? 'Ubah' : 'Kunci'"></span>
+                                </button>
+                            </template>
+                        </div>
                         @error('alamat') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Nama Jalan, Gedung, No rumah</label>
+                        <input type="text" name="jalan_gedung" x-model="form.jalan_gedung" required
+                            class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white placeholder-dark-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors"
+                            placeholder="Contoh: Jl. Diponegoro No. 15, Gedung Sate">
+                        @error('jalan_gedung') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Detail Lainnya <span class="text-dark-500">(opsional)</span></label>
+                        <input type="text" name="detail_lainnya" x-model="form.detail_lainnya"
+                            class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white placeholder-dark-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors"
+                            placeholder="Contoh: RT 03/RW 04, Samping Alfamart, Pagar Hitam">
+                        @error('detail_lainnya') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
@@ -217,7 +324,7 @@
 
                         {{-- Geolocation button --}}
                         <button type="button" @click="requestGeolocation()" class="mb-3 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-accent-500/10 text-accent-400 border border-accent-500/20 hover:bg-accent-500/20 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <svg class="w-4 h-4 shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span x-text="geoLoading ? 'Mencari lokasi...' : 'Gunakan Lokasi Saya'"></span>
                         </button>
                         <div x-show="geoError" class="mb-3 text-xs text-red-400" x-text="geoError"></div>
@@ -226,14 +333,14 @@
                         <input type="hidden" name="latitude" x-model="form.latitude">
                         <input type="hidden" name="longitude" x-model="form.longitude">
                         <div x-show="form.latitude" class="mt-2 text-xs text-dark-500">
-                            <x-heroicon-o-map-pin class="w-3.5 h-3.5 text-dark-500 inline" /> Koordinat: <span x-text="form.latitude"></span>, <span x-text="form.longitude"></span>
+                            <x-heroicon-o-map-pin class="w-3.5 h-3.5 text-dark-500 inline" style="width: 14px; height: 14px; display: inline-block; vertical-align: text-bottom;" /> Koordinat: <span x-text="form.latitude"></span>, <span x-text="form.longitude"></span>
                         </div>
-                        <p class="mt-1 text-xs text-dark-500 flex items-center gap-1"><x-heroicon-o-light-bulb class="w-3.5 h-3.5" /> Ketik nama tempat di kolom search pada peta, atau klik langsung pada peta untuk memilih lokasi.</p>
+                        <p class="mt-1 text-xs text-dark-500 flex items-center gap-1"><x-heroicon-o-light-bulb class="w-3.5 h-3.5 shrink-0" style="width: 14px; height: 14px;" /> Ketik nama tempat di kolom search pada peta, atau klik langsung pada peta untuk memilih lokasi.</p>
                     </div>
 
                     <div class="flex gap-3 pt-2">
                         <button type="button" @click="step--" class="flex-1 py-3 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-dark-500 transition-all">← Kembali</button>
-                        <button type="button" @click="nextStep()" :disabled="!form.alamat"
+                        <button type="button" @click="nextStep()" :disabled="!form.alamat || !form.jalan_gedung"
                             class="flex-1 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary-500 to-primary-600 text-dark-950 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                             Lanjut Detail →
                         </button>
@@ -265,6 +372,7 @@
                         <div class="flex justify-between text-sm"><span class="text-dark-400">Tanggal</span><span x-text="form.tanggal_acara"></span></div>
                         <div class="flex justify-between text-sm"><span class="text-dark-400">Jam</span><span x-text="form.jam_acara"></span></div>
                         <div class="flex justify-between text-sm"><span class="text-dark-400">Lokasi</span><span x-text="form.alamat ? form.alamat.substring(0,40) + '...' : '-'" class="text-right max-w-[200px] truncate"></span></div>
+                        <div class="flex justify-between text-sm"><span class="text-dark-400">Jalan/Gedung</span><span x-text="form.jalan_gedung ? form.jalan_gedung.substring(0,40) + '...' : '-'" class="text-right max-w-[200px] truncate"></span></div>
                         <div class="border-t border-dark-600 my-2"></div>
                         <div class="flex justify-between font-bold"><span>Total</span><span class="text-gradient" x-text="'Rp ' + Number(form.total_harga).toLocaleString('id-ID')"></span></div>
                     </div>
@@ -275,6 +383,55 @@
                             class="flex-1 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-primary-500 to-primary-600 text-dark-950 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/25">
                             <span class="inline-flex items-center gap-1"><x-heroicon-o-check-badge class="w-4 h-4" /> Submit Booking</span>
                         </button>
+                    </div>
+                </div>
+
+                {{-- Custom Confirmation Modal --}}
+                <div x-show="showConfirmModal" 
+                     x-cloak
+                     class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
+                    
+                    {{-- Backdrop --}}
+                    <div class="absolute inset-0 bg-dark-950/80 backdrop-blur-sm" @click="showConfirmModal = false"></div>
+                    
+                    {{-- Modal Card --}}
+                    <div class="relative bg-dark-900/95 border border-dark-700/80 rounded-2xl p-6 max-w-md w-full shadow-2xl shadow-black/80 backdrop-blur-md transform transition-all"
+                         x-show="showConfirmModal"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95">
+                        
+                        {{-- Modal Content --}}
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+                                <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-yellow-500" />
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="text-lg font-bold text-white">Ubah Lokasi Acara?</h3>
+                                <p class="text-sm text-dark-300 leading-relaxed">Apakah Anda yakin ingin mengubah lokasi? Anda harus memilih kembali lokasi pada peta atau mengedit teks secara manual.</p>
+                            </div>
+                        </div>
+                        
+                        {{-- Actions --}}
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button type="button" @click="showConfirmModal = false"
+                                class="px-4 py-2.5 rounded-xl text-sm font-semibold text-dark-300 border border-dark-700 hover:border-dark-500 transition-all">
+                                Batal
+                            </button>
+                            <button type="button" @click="confirmAddressChangeAction()"
+                                class="px-4 py-2.5 rounded-xl text-sm font-bold bg-yellow-500 text-dark-950 hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/20">
+                                Ya, Ubah
+                            </button>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -297,11 +454,15 @@
                     geocoder: null,
                     geoLoading: false,
                     geoError: '',
+                    isAddressReadonly: '{{ old("alamat", "") }}' !== '',
+                    showConfirmModal: false,
                     form: {
                         tanggal_acara: '{{ old("tanggal_acara", "") }}',
                         jam_acara: '{{ old("jam_acara", "") }}',
                         paket_id: '{{ old("paket_id", "") }}',
                         alamat: '{{ old("alamat", "") }}',
+                        jalan_gedung: '{{ old("jalan_gedung", "") }}',
+                        detail_lainnya: '{{ old("detail_lainnya", "") }}',
                         latitude: '{{ old("latitude", "") }}',
                         longitude: '{{ old("longitude", "") }}',
                         nama_acara: '{{ old("nama_acara", "") }}',
@@ -391,8 +552,9 @@
                                 }
                             })
                         }).on('markgeocode', (e) => {
-                            const { center, name } = e.geocode;
-                            this.setLocation(center.lat, center.lng, name);
+                            const { center } = e.geocode;
+                            this.setLocation(center.lat, center.lng);
+                            this.reverseGeocode(center.lat, center.lng);
                         }).addTo(this.map);
 
                         // Click on map to place marker + reverse geocode
@@ -428,12 +590,42 @@
                         }
                     },
 
+                    formatAddress(addressObj) {
+                        if (!addressObj) return '';
+                        const provinsi = addressObj.state || addressObj.region || '';
+                        const kota = addressObj.city || addressObj.town || addressObj.city_district || addressObj.municipality || addressObj.county || '';
+                        const kecamatan = addressObj.suburb || addressObj.district || addressObj.subdistrict || addressObj.village || '';
+                        const kodePos = addressObj.postcode || '';
+
+                        return [provinsi, kota, kecamatan, kodePos]
+                            .map(s => s.trim())
+                            .filter(s => s.length > 0)
+                            .join(', ');
+                    },
+
+                    confirmChangeAddress() {
+                        if (this.isAddressReadonly) {
+                            this.showConfirmModal = true;
+                        } else {
+                            this.isAddressReadonly = true;
+                        }
+                    },
+
+                    confirmAddressChangeAction() {
+                        this.isAddressReadonly = false;
+                        this.showConfirmModal = false;
+                    },
+
                     async reverseGeocode(lat, lng) {
                         try {
                             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`);
                             const data = await res.json();
-                            if (data.display_name) {
+                            if (data.address) {
+                                this.form.alamat = this.formatAddress(data.address);
+                                this.isAddressReadonly = true;
+                            } else if (data.display_name) {
                                 this.form.alamat = data.display_name;
+                                this.isAddressReadonly = true;
                             }
                         } catch {
                             // Silently fail reverse geocode

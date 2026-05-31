@@ -32,21 +32,29 @@
                                         <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $payment->status === 'verified' ? 'bg-green-500/10 text-green-400' : ($payment->status === 'rejected' ? 'bg-red-500/10 text-red-400' : 'bg-yellow-500/10 text-yellow-400') }}">{{ $payment->status_label }}</span>
                                     </td>
                                     <td class="px-5 py-4">
-                                        @if($payment->bukti_transfer)
-                                            <a href="{{ asset('storage/' . $payment->bukti_transfer) }}" target="_blank" class="text-xs text-primary-400 hover:text-primary-300 mr-3">Bukti</a>
-                                        @endif
-                                        @if($payment->status === 'pending')
-                                            <form method="POST" action="{{ route('admin.payments.verify', $payment) }}" class="inline">
-                                                @csrf @method('PATCH')
-                                                <input type="hidden" name="action" value="verify">
-                                                <button class="text-xs text-green-400 hover:text-green-300 mr-2">✓ Verifikasi</button>
-                                            </form>
-                                            <form method="POST" action="{{ route('admin.payments.verify', $payment) }}" class="inline">
-                                                @csrf @method('PATCH')
-                                                <input type="hidden" name="action" value="reject">
-                                                <button class="text-xs text-red-400 hover:text-red-300">✗ Tolak</button>
-                                            </form>
-                                        @endif
+                                        <div class="flex items-center gap-1">
+                                            @if($payment->bukti_transfer)
+                                                <a href="{{ asset('storage/' . $payment->bukti_transfer) }}" target="_blank" class="p-2 rounded-lg text-primary-400 hover:bg-primary-500/10 transition-colors" title="Lihat Bukti">
+                                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                                </a>
+                                            @endif
+                                            @if($payment->status === 'pending')
+                                                <form method="POST" action="{{ route('admin.payments.verify', $payment) }}" class="inline">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="action" value="verify">
+                                                    <button type="submit" class="p-2 rounded-lg text-green-400 hover:bg-green-500/10 transition-colors" title="Verifikasi">
+                                                        <x-heroicon-o-check-circle class="w-4 h-4" />
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ route('admin.payments.verify', $payment) }}" class="inline">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="action" value="reject">
+                                                    <button type="submit" class="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors" title="Tolak">
+                                                        <x-heroicon-o-x-circle class="w-4 h-4" />
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

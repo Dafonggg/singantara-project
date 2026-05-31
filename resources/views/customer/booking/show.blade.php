@@ -98,11 +98,26 @@
                     {{-- Upload Payment --}}
                     @php
                         $hasPendingPayment = $booking->payments->where('status', 'pending')->count() > 0;
-                        $dpVerified = $booking->payments->where('jenis', 'dp')->where('status', 'verified')->count() > 0;
-                        $pelunasanVerified = $booking->payments->where('jenis', 'pelunasan')->where('status', 'verified')->count() > 0;
+                        $dpVerified = $booking->payments->where('jenis', 'dp')->where('status', 'verified')->count() > 0
+                                      || in_array($booking->status, ['dp_paid', 'paid', 'ongoing', 'completed']);
+                        $pelunasanVerified = $booking->payments->where('jenis', 'pelunasan')->where('status', 'verified')->count() > 0
+                                             || in_array($booking->status, ['paid', 'ongoing', 'completed']);
                         $allowedStatuses = ['confirmed', 'dp_paid', 'paid', 'ongoing'];
                         $canUpload = in_array($booking->status, $allowedStatuses) && !$hasPendingPayment && !$pelunasanVerified;
+                        $totalPaid = $booking->payments->where('status', 'verified')->sum('jumlah');
+                        $remainingBalance = $booking->total_harga - $totalPaid;
                     @endphp
+
+                    {{-- DP Hangus Warning Notice --}}
+                    @if(!$pelunasanVerified && !in_array($booking->status, ['completed', 'cancelled']))
+                        <div class="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-start gap-3">
+                            <span class="text-lg shrink-0 mt-0.5"><x-heroicon-o-exclamation-triangle class="w-5 h-5 text-yellow-400" /></span>
+                            <div class="text-xs">
+                                <span class="font-semibold block mb-0.5">Penting: Ketentuan Batas Pembayaran</span>
+                                Harap lakukan pelunasan pembayaran sebelum tanggal acara ({{ $booking->tanggal_acara->translatedFormat('d F Y') }}). Jika pelunasan tidak diselesaikan hingga tanggal tersebut, maka booking dianggap batal dan DP yang telah dibayarkan akan hangus.
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- Status: Pending — Waiting for admin confirmation --}}
                     @if($booking->status === 'pending')
@@ -170,7 +185,38 @@
                             </div>
 
                             <form method="POST" action="{{ route('customer.booking.payment', $booking) }}" enctype="multipart/form-data" class="space-y-4"
-                                x-data="{ fileSelected: false, fileName: '' }">
+                                x-data="{
+                                    fileSelected: false,
+                                    fileName: '',
+                                    metode: '',
+                                    jenis: '{{ !$dpVerified ? 'dp' : 'pelunasan' }}',
+                                    jumlah: 0,
+                                    totalHarga: {{ $booking->total_harga }},
+                                    remainingBalance: {{ $remainingBalance }},
+                                    get maxAmount() {
+                                        return this.jenis === 'dp' ? (this.totalHarga * 0.5) : this.remainingBalance;
+                                    },
+                                    init() {
+                                        this.updateAmount();
+                                    },
+                                    updateAmount() {
+                                        this.jumlah = this.maxAmount;
+                                    },
+                                    handleInput(e) {
+                                        let val = parseFloat(e.target.value);
+                                        if (isNaN(val)) {
+                                            this.jumlah = '';
+                                            return;
+                                        }
+                                        if (val > this.maxAmount) {
+                                            this.jumlah = this.maxAmount;
+                                        } else if (val < 0) {
+                                            this.jumlah = 0;
+                                        } else {
+                                            this.jumlah = val;
+                                        }
+                                    }
+                                }">
                                 @csrf
 
                                 {{-- Validation Errors --}}
@@ -187,9 +233,10 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-dark-300 mb-2">Jenis Pembayaran</label>
-                                    <select name="jenis" class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
+                                    <select name="jenis" x-model="jenis" x-on:change="updateAmount()" class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
                                         @if(!$dpVerified)
                                             <option value="dp">DP (50%)</option>
+                                            <option value="pelunasan">Pelunasan</option>
                                         @endif
                                         @if($dpVerified)
                                             <option value="pelunasan">Pelunasan</option>
@@ -199,7 +246,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-dark-300 mb-2">Metode Pembayaran</label>
-                                    <select name="metode" required class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
+                                    <select name="metode" x-model="metode" required class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors">
                                         <option value="">-- Pilih Bank Tujuan --</option>
                                         @foreach($bankAccounts as $bank)
                                             <option value="{{ $bank->kode_bank }}">Transfer {{ $bank->nama_bank }} ({{ $bank->nomor_rekening }})</option>
@@ -209,7 +256,13 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-dark-300 mb-2">Jumlah (Rp)</label>
-                                    <input type="number" name="jumlah" required class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors" placeholder="0">
+                                    <input type="number" name="jumlah" x-model.number="jumlah" x-on:input="handleInput($event)" :max="maxAmount" required class="w-full px-4 py-3 rounded-xl bg-dark-800/50 border border-dark-700 text-white focus:outline-none focus:border-primary-500 transition-colors" placeholder="0">
+                                    <p class="mt-1.5 text-xs text-dark-400" x-show="jenis === 'dp'">
+                                        Batas maksimal DP (50%): <span class="text-primary-400 font-semibold">Rp <span x-text="new Intl.NumberFormat('id-ID').format(totalHarga * 0.5)"></span></span>
+                                    </p>
+                                    <p class="mt-1.5 text-xs text-dark-400" x-show="jenis === 'pelunasan'">
+                                        Sisa tagihan yang harus dibayar: <span class="text-primary-400 font-semibold">Rp <span x-text="new Intl.NumberFormat('id-ID').format(remainingBalance)"></span></span>
+                                    </p>
                                     @error('jumlah') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
@@ -219,22 +272,25 @@
                                         class="w-full text-sm text-dark-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-500/10 file:text-primary-400 hover:file:bg-primary-500/20">
                                     {{-- File selected indicator --}}
                                     <div x-show="fileSelected" x-transition class="mt-2 flex items-center gap-2 text-xs text-accent-400">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <svg class="w-4 h-4 shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                         <span x-text="fileName"></span>
                                     </div>
-                                    <div x-show="!fileSelected" class="mt-2 text-xs text-dark-500 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        Upload bukti transfer terlebih dahulu untuk mengaktifkan tombol
+                                    <div x-show="!fileSelected || !metode" class="mt-2 text-xs text-dark-500 flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 shrink-0" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <span x-text="!metode ? 'Pilih metode pembayaran (rekening tujuan) terlebih dahulu' : 'Upload bukti transfer terlebih dahulu untuk mengaktifkan tombol'"></span>
                                     </div>
                                     @error('bukti_transfer') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
                                 </div>
-                                <button type="submit" :disabled="!fileSelected"
+                                <button type="submit" :disabled="!fileSelected || !metode"
                                     class="w-full py-3 rounded-xl text-sm font-bold transition-all"
-                                    :class="fileSelected
+                                    :class="fileSelected && metode
                                         ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-dark-950 hover:from-primary-400 hover:to-primary-500 shadow-lg shadow-primary-500/25 cursor-pointer'
                                         : 'bg-dark-700 text-dark-500 cursor-not-allowed'">
-                                    <span x-show="!fileSelected" class="inline-flex items-center gap-1"><x-heroicon-o-lock-closed class="w-4 h-4" /> Upload Bukti Transfer Dulu</span>
-                                    <span x-show="fileSelected" class="inline-flex items-center gap-1"><x-heroicon-o-check-badge class="w-4 h-4" /> Upload Pembayaran</span>
+                                    <span x-show="!fileSelected || !metode" class="inline-flex items-center gap-1">
+                                        <x-heroicon-o-lock-closed class="w-4 h-4" />
+                                        <span x-text="!metode ? 'Pilih Metode Pembayaran' : 'Upload Bukti Transfer Dulu'"></span>
+                                    </span>
+                                    <span x-show="fileSelected && metode" class="inline-flex items-center gap-1"><x-heroicon-o-check-badge class="w-4 h-4" /> Upload Pembayaran</span>
                                 </button>
                             </form>
                         </div>

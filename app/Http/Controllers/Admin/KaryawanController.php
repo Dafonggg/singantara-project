@@ -25,7 +25,9 @@ class KaryawanController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'required|string|alpha_dash|max:255|unique:users',
             'email' => 'required|email|unique:users',
+            'peran' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
             'password' => 'required|min:8',
@@ -33,7 +35,9 @@ class KaryawanController extends Controller
 
         User::create([
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
+            'peran' => $validated['peran'] ?? null,
             'phone' => $validated['phone'],
             'address' => $validated['address'] ?? null,
             'password' => Hash::make($validated['password']),
@@ -53,7 +57,9 @@ class KaryawanController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => "required|string|alpha_dash|max:255|unique:users,username,{$karyawan->id}",
             'email' => "required|email|unique:users,email,{$karyawan->id}",
+            'peran' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
             'status' => 'required|in:active,inactive',

@@ -39,6 +39,48 @@ class Booking extends Model
 
     // ── Status Helpers ────────────────────────────
 
+    public function canTransitionTo(string $targetStatus): bool
+    {
+        if ($this->status === $targetStatus) {
+            return false;
+        }
+
+        $statusOrder = [
+            'pending' => 1,
+            'confirmed' => 2,
+            'dp_paid' => 3,
+            'paid' => 4,
+            'ongoing' => 5,
+            'completed' => 6,
+            'cancelled' => 7,
+        ];
+
+        $currentOrder = $statusOrder[$this->status] ?? 0;
+        $targetOrder = $statusOrder[$targetStatus] ?? 0;
+
+        // Cancelled is a terminal state (cannot transition out of cancelled)
+        if ($this->status === 'cancelled') {
+            return false;
+        }
+
+        // Completed is a terminal state (cannot transition out of completed)
+        if ($this->status === 'completed') {
+            return false;
+        }
+
+        // Cannot transition to a status that has a lower order (previous status)
+        if ($targetOrder < $currentOrder) {
+            return false;
+        }
+
+        // Ongoing cannot transition to cancelled (it's already in progress)
+        if ($this->status === 'ongoing' && $targetStatus === 'cancelled') {
+            return false;
+        }
+
+        return true;
+    }
+
     public function isPending(): bool
     {
         return $this->status === 'pending';

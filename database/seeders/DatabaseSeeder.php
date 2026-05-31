@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         // ── Admin & Owner ─────────────────────────────
         User::create([
             'name' => 'Administrator',
+            'username' => 'admin',
             'email' => 'admin@sigantara.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
@@ -28,6 +29,7 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'name' => 'Pemilik Alan Group',
+            'username' => 'owner',
             'email' => 'owner@sigantara.com',
             'password' => Hash::make('password'),
             'role' => 'owner',
@@ -36,14 +38,53 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // ── Sample Karyawan ───────────────────────────
-        $karyawanNames = ['Ahmad Surya', 'Budi Santoso', 'Cecep Hidayat', 'Dedi Kurniawan', 'Eko Prasetyo'];
-        foreach ($karyawanNames as $i => $name) {
+        $karyawans = [
+            [
+                'name' => 'Ahmad Surya',
+                'username' => 'ahmadsurya',
+                'email' => 'ahmad.surya@sigantara.com',
+                'peran' => 'Penopang Singa',
+                'phone' => '081234567892',
+            ],
+            [
+                'name' => 'Saiful Anwar',
+                'username' => 'saifulanwar',
+                'email' => 'saiful.anwar@sigantara.com',
+                'peran' => 'Pemain Kendang',
+                'phone' => '081234567893',
+            ],
+            [
+                'name' => 'Tito',
+                'username' => 'tito',
+                'email' => 'tito@sigantara.com',
+                'peran' => 'Pemain Terompet',
+                'phone' => '081234567894',
+            ],
+            [
+                'name' => 'Dffa',
+                'username' => 'dffa',
+                'email' => 'dffa@sigantara.com',
+                'peran' => 'Pemain Gong',
+                'phone' => '081234567895',
+            ],
+            [
+                'name' => 'Safut',
+                'username' => 'safut',
+                'email' => 'safut@sigantara.com',
+                'peran' => 'Pemandu Acara',
+                'phone' => '081234567896',
+            ],
+        ];
+
+        foreach ($karyawans as $k) {
             User::create([
-                'name' => $name,
-                'email' => 'karyawan' . ($i + 1) . '@sigantara.com',
+                'name' => $k['name'],
+                'username' => $k['username'],
+                'email' => $k['email'],
                 'password' => Hash::make('password'),
                 'role' => 'karyawan',
-                'phone' => '08123456789' . ($i + 2),
+                'peran' => $k['peran'],
+                'phone' => $k['phone'],
                 'status' => 'active',
             ]);
         }
@@ -51,6 +92,7 @@ class DatabaseSeeder extends Seeder
         // ── Sample Pelanggan ──────────────────────────
         User::create([
             'name' => 'Pelanggan Demo',
+            'username' => 'pelanggan',
             'email' => 'pelanggan@sigantara.com',
             'password' => Hash::make('password'),
             'role' => 'pelanggan',

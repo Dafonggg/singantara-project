@@ -137,6 +137,8 @@ class CustomerController extends Controller
             'jam_acara' => 'required',
             'nama_acara' => 'required|string|max:255',
             'alamat' => 'required|string',
+            'jalan_gedung' => 'required|string|max:255',
+            'detail_lainnya' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'catatan' => 'nullable|string|max:1000',
@@ -153,23 +155,30 @@ class CustomerController extends Controller
 
         $paket = Paket::findOrFail($validated['paket_id']);
 
+        // Concatenate address details
+        $alamatLengkap = $validated['jalan_gedung'];
+        if (!empty($validated['detail_lainnya'])) {
+            $alamatLengkap .= ' (' . $validated['detail_lainnya'] . ')';
+        }
+        $alamatLengkap .= ', ' . $validated['alamat'];
+
         $booking = Booking::create([
             'user_id' => Auth::id(),
             'paket_id' => $paket->id,
             'tanggal_acara' => $validated['tanggal_acara'],
             'jam_acara' => $validated['jam_acara'],
             'nama_acara' => $validated['nama_acara'],
-            'alamat' => $validated['alamat'],
+            'alamat' => $alamatLengkap,
             'latitude' => $validated['latitude'] ?? null,
             'longitude' => $validated['longitude'] ?? null,
             'catatan' => $validated['catatan'] ?? null,
-            'status' => 'pending',
+            'status' => 'confirmed',
             'total_harga' => $paket->harga,
             'biaya_transport' => 0,
         ]);
 
         return redirect()->route('customer.booking.show', $booking)
-            ->with('success', 'Booking berhasil dibuat! Silakan tunggu konfirmasi dari admin.');
+            ->with('success', 'Booking berhasil dibuat! Silakan lakukan pembayaran DP atau Pelunasan.');
     }
 
     /**
@@ -224,29 +233,43 @@ class CustomerController extends Controller
             return back()->with('error', 'Anda masih memiliki pembayaran yang menunggu verifikasi. Silakan tunggu hingga admin memverifikasi.');
         }
 
-        $validated = $request->validate([
+        $request->validate([
             'jenis' => 'required|in:dp,pelunasan',
-            'jumlah' => 'required|numeric|min:10000',
-            'metode' => 'required|exists:bank_accounts,kode_bank',
-            'bukti_transfer' => 'required|image|mimes:jpg,jpeg,png,webp,heic,heif|max:5120',
         ]);
 
-        // Prevent duplicate DP: check if DP already verified
+        $totalPaid = $booking->payments()->where('status', 'verified')->sum('jumlah');
+        $remainingBalance = $booking->total_harga - $totalPaid;
+        $jenis = $request->input('jenis');
+        $maxAmount = $jenis === 'dp' ? ($booking->total_harga * 0.5) : $remainingBalance;
+
+        $validated = $request->validate([
+            'jenis' => 'required|in:dp,pelunasan',
+            'jumlah' => 'required|numeric|min:10000|max:' . $maxAmount,
+            'metode' => 'required|exists:bank_accounts,kode_bank',
+            'bukti_transfer' => 'required|image|mimes:jpg,jpeg,png,webp,heic,heif|max:5120',
+        ], [
+            'jumlah.max' => 'Jumlah pembayaran tidak boleh melebihi ' . ($jenis === 'dp' ? 'DP (50%) yaitu Rp ' . number_format($booking->total_harga * 0.5, 0, ',', '.') : 'sisa tagihan yaitu Rp ' . number_format($remainingBalance, 0, ',', '.')),
+        ]);
+
+        // Prevent duplicate DP: check if DP already verified or booking status indicates DP is paid
         if ($validated['jenis'] === 'dp') {
-            $dpVerified = $booking->payments()->where('jenis', 'dp')->where('status', 'verified')->exists();
+            $dpVerified = $booking->payments()->where('jenis', 'dp')->where('status', 'verified')->exists()
+                          || in_array($booking->status, ['dp_paid', 'paid', 'ongoing', 'completed']);
             if ($dpVerified) {
-                return back()->with('error', 'DP sudah dibayar dan terverifikasi.');
+                return back()->with('error', 'DP sudah dibayar.');
             }
         }
 
-        // Prevent duplicate pelunasan: check if pelunasan already verified
+        // Prevent duplicate pelunasan: check if pelunasan already verified or booking status is paid or higher
         if ($validated['jenis'] === 'pelunasan') {
-            $pelunasanVerified = $booking->payments()->where('jenis', 'pelunasan')->where('status', 'verified')->exists();
+            $pelunasanVerified = $booking->payments()->where('jenis', 'pelunasan')->where('status', 'verified')->exists()
+                                 || in_array($booking->status, ['paid', 'ongoing', 'completed']);
             if ($pelunasanVerified) {
-                return back()->with('error', 'Pelunasan sudah dibayar dan terverifikasi.');
+                return back()->with('error', 'Pelunasan sudah dibayar.');
             }
-            // Pelunasan can only be done after DP is verified
-            $dpVerified = $booking->payments()->where('jenis', 'dp')->where('status', 'verified')->exists();
+            // Pelunasan can only be done after DP is verified or booking status is dp_paid or higher
+            $dpVerified = $booking->payments()->where('jenis', 'dp')->where('status', 'verified')->exists()
+                          || in_array($booking->status, ['dp_paid', 'paid', 'ongoing', 'completed']);
             if (!$dpVerified) {
                 return back()->with('error', 'DP harus diverifikasi terlebih dahulu sebelum melakukan pelunasan.');
             }

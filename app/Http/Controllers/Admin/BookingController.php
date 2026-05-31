@@ -49,6 +49,10 @@ class BookingController extends Controller
     {
         $request->validate(['status' => 'required|in:pending,confirmed,dp_paid,paid,ongoing,completed,cancelled']);
 
+        if (!$booking->canTransitionTo($request->status)) {
+            return back()->with('error', 'Perubahan status booking ini tidak valid.');
+        }
+
         $booking->update(['status' => $request->status]);
 
         return back()->with('success', "Status booking diubah menjadi: {$booking->status_label}");
@@ -58,8 +62,9 @@ class BookingController extends Controller
     {
         $request->validate([
             'karyawan_id' => 'required|exists:users,id',
-            'peran' => 'nullable|string|max:100',
         ]);
+
+        $karyawan = User::findOrFail($request->karyawan_id);
 
         // Prevent assigning the same employee twice
         $existing = Jadwal::where('booking_id', $booking->id)
@@ -73,7 +78,7 @@ class BookingController extends Controller
         Jadwal::create([
             'booking_id' => $booking->id,
             'karyawan_id' => $request->karyawan_id,
-            'peran' => $request->peran ?? 'Pemain',
+            'peran' => $karyawan->peran ?? 'Pemain',
         ]);
 
         return back()->with('success', 'Karyawan berhasil ditugaskan.');
