@@ -35,9 +35,9 @@ Sistem memiliki **4 peran (role) utama:**
 
 | Role | Deskripsi |
 |------|-----------|
-| **Owner** | Pemilik usaha — melihat laporan, kelola rekening bank, kelola akun |
-| **Admin** | Mengelola booking, verifikasi pembayaran, kelola paket, karyawan, galeri, testimoni, dan user |
-| **Karyawan** | Melihat jadwal tugas dan menandai kehadiran |
+| **Owner** | Pemilik usaha — melihat laporan, kelola rekening bank |
+| **Admin** | Mengelola booking, verifikasi pembayaran, kelola paket, karyawan, galeri, dan testimoni |
+| **Karyawan** | Melihat jadwal tugas dan mengonfirmasi kesediaan |
 | **Pelanggan** | Mendaftar, melakukan booking, upload pembayaran, dan memberi testimoni |
 
 ---
@@ -50,35 +50,35 @@ Sistem memiliki **4 peran (role) utama:**
 - Testimoni pelanggan (yang sudah disetujui admin)
 
 ### 👤 Pelanggan
-- Registrasi & login
+- Registrasi & login menggunakan **username**
 - Dashboard ringkasan booking
 - Pemesanan booking online (pilih paket, tanggal, lokasi via peta Leaflet)
-- Cek ketersediaan tanggal secara realtime
-- Upload bukti pembayaran (DP & pelunasan)
+- Input alamat terstruktur: Jalan/Gedung, Detail Lainnya, serta auto-fill dari peta
+- Cek ketersediaan tanggal secara realtime (maks 1 booking/hari)
+- Upload bukti pembayaran (DP & pelunasan) langsung setelah booking dikonfirmasi
+- Validasi jumlah pembayaran (DP maks 50%, pelunasan maks sisa tagihan)
 - Riwayat booking
 - Kirim testimoni setelah acara selesai
 
 ### 🛡️ Admin
 - Dashboard dengan statistik (Chart.js)
-- Kelola booking (konfirmasi, ubah status)
-- Verifikasi pembayaran
+- Kelola booking (ubah status via tombol/ikon)
+- Verifikasi pembayaran (approve/reject)
 - CRUD paket sisingaan
-- CRUD karyawan
+- CRUD karyawan (dengan peran/posisi: Penopang Singa, Pemain Kendang, dll)
 - CRUD galeri foto
 - Moderasi testimoni (approve/reject)
 - Assign karyawan ke jadwal booking
-- CRUD akun admin
 
 ### 👑 Owner
 - Dashboard ringkasan bisnis
 - Laporan pendapatan & export PDF (DomPDF)
 - Kelola rekening bank (untuk info transfer)
-- Kelola akun karyawan & admin
 
 ### 👷 Karyawan
 - Dashboard jadwal tugas
 - Lihat detail acara & lokasi
-- Update status kehadiran
+- Konfirmasi **kesediaan** (bersedia/tidak bersedia) dengan catatan wajib jika tidak bersedia
 
 ---
 
@@ -94,7 +94,7 @@ Sistem memiliki **4 peran (role) utama:**
 | **Icons** | Blade Heroicons |
 | **PDF Export** | barryvdh/laravel-dompdf |
 | **Charts** | Chart.js |
-| **Auth** | Laravel built-in (custom AuthController) |
+| **Auth** | Laravel built-in (custom AuthController, login via **username**) |
 | **Middleware** | Custom RoleMiddleware |
 
 ---
@@ -115,14 +115,12 @@ sigantara/
 │   │   │   │   ├── KaryawanController.php
 │   │   │   │   ├── PaketController.php
 │   │   │   │   ├── PaymentController.php
-│   │   │   │   ├── TestimonialController.php
-│   │   │   │   └── UserController.php
+│   │   │   │   └── TestimonialController.php
 │   │   │   ├── Owner/                  # Controller khusus owner
-│   │   │   │   ├── BankAccountController.php
-│   │   │   │   └── UserController.php
-│   │   │   ├── AuthController.php      # Login, register, logout
+│   │   │   │   └── BankAccountController.php
+│   │   │   ├── AuthController.php      # Login (username), register, logout
 │   │   │   ├── CustomerController.php  # Semua fitur pelanggan
-│   │   │   ├── KaryawanController.php  # Jadwal & kehadiran
+│   │   │   ├── KaryawanController.php  # Jadwal & kesediaan karyawan
 │   │   │   ├── LandingController.php   # Halaman utama publik
 │   │   │   └── OwnerController.php     # Dashboard & laporan owner
 │   │   └── Middleware/
@@ -139,7 +137,7 @@ sigantara/
 ├── database/
 │   ├── migrations/                     # Skema tabel database
 │   └── seeders/
-│       └── DatabaseSeeder.php          # Data awal (admin, owner, paket, dll)
+│       └── DatabaseSeeder.php          # Data awal (admin, owner, karyawan, paket, dll)
 ├── resources/views/
 │   ├── admin/                          # View halaman admin
 │   ├── auth/                           # Login & register
@@ -166,6 +164,7 @@ sigantara/
        ▼
 ┌──────────────┐     ┌───────────────┐
 │   Register   │────▶│     Login     │
+│  (username)  │     │  (username)   │
 └──────────────┘     └───────┬───────┘
                              ▼
                    ┌──────────────────┐
@@ -178,24 +177,21 @@ sigantara/
                    │                  │
                    │ 1. Pilih Paket   │
                    │ 2. Pilih Tanggal │◀── Cek ketersediaan (AJAX)
-                   │ 3. Input Alamat  │
-                   │ 4. Pilih Lokasi  │◀── Leaflet Map Picker
-                   │ 5. Catatan       │
+                   │ 3. Jalan/Gedung  │
+                   │ 4. Detail Lainnya│
+                   │ 5. Pilih Lokasi  │◀── Leaflet Map Picker (auto-fill alamat)
+                   │ 6. Catatan       │
                    └────────┬─────────┘
                             ▼
                    ┌──────────────────┐
-                   │  Status: PENDING │
-                   │  Menunggu Admin  │
+                   │ Status: CONFIRMED│
+                   │ (otomatis)       │
                    └────────┬─────────┘
-                            ▼
-              ┌─────────────────────────────┐
-              │  Admin konfirmasi booking   │
-              │  Status → CONFIRMED         │
-              └─────────────┬───────────────┘
                             ▼
                    ┌──────────────────┐
                    │  Upload Bukti DP │
-                   │  (Min. 50%)      │
+                   │ Pilih Metode     │◀── Pilih rekening bank
+                   │ (Maks 50% harga) │
                    └────────┬─────────┘
                             ▼
               ┌─────────────────────────────┐
@@ -210,6 +206,8 @@ sigantara/
                             ▼
                    ┌──────────────────┐
                    │ Upload Pelunasan │
+                   │ (Maks sisa       │
+                   │  tagihan)        │
                    └────────┬─────────┘
                             ▼
               ┌─────────────────────────────┐
@@ -234,17 +232,24 @@ Pelanggan                        Admin
 ────────                        ─────
 Upload bukti DP ──────────────▶ Verifikasi DP
   (jenis: dp)                    ├── ✅ Verified → status booking: dp_paid
-  (status: pending)              └── ❌ Rejected
+  (metode: kode_bank)            └── ❌ Rejected
+  (jumlah: maks 50% harga)
+  (status: pending)
                                        ▼
 Upload bukti Pelunasan ───────▶ Verifikasi Pelunasan
   (jenis: pelunasan)             ├── ✅ Verified → status booking: paid
-  (status: pending)              └── ❌ Rejected
+  (jumlah: maks sisa tagihan)   └── ❌ Rejected
+  (status: pending)
 ```
 
 **Validasi pembayaran:**
+- Booking langsung berstatus `confirmed` saat dibuat — pelanggan bisa langsung upload pembayaran
+- Jumlah DP tidak boleh melebihi 50% dari harga paket
+- Jumlah pelunasan tidak boleh melebihi sisa tagihan
 - DP harus diverifikasi sebelum bisa upload pelunasan
 - Tidak bisa upload ganda jika masih ada pembayaran pending
 - Tidak bisa duplikat DP/pelunasan yang sudah verified
+- Pelanggan harus memilih metode pembayaran (rekening bank) sebelum melanjutkan
 
 ### 3. Flow Admin
 
@@ -256,8 +261,8 @@ Upload bukti Pelunasan ───────▶ Verifikasi Pelunasan
 │  📊 Dashboard ── Statistik booking, pendapatan, chart        │
 │                                                              │
 │  📋 Booking ──── Lihat semua booking                         │
-│        ├── Ubah status (pending → confirmed → ongoing → ... )│
-│        └── Assign karyawan ke jadwal                         │
+│        ├── Ubah status via tombol (confirmed → ongoing → ...)│
+│        └── Assign karyawan ke jadwal (dengan peran)          │
 │                                                              │
 │  💳 Payments ─── Verifikasi bukti pembayaran                 │
 │        └── Approve / Reject                                  │
@@ -266,13 +271,12 @@ Upload bukti Pelunasan ───────▶ Verifikasi Pelunasan
 │        └── Nama, deskripsi, harga, jumlah pemain, durasi     │
 │                                                              │
 │  👷 Karyawan ─── CRUD data karyawan                          │
+│        └── Nama, username, peran (posisi), telepon, alamat   │
 │                                                              │
 │  🖼️ Galeri ───── CRUD foto dokumentasi                       │
 │                                                              │
 │  ⭐ Testimoni ── Moderasi testimoni pelanggan                │
 │        └── Approve / Reject / Hapus                          │
-│                                                              │
-│  👤 Users ────── CRUD akun admin                             │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -290,9 +294,8 @@ Upload bukti Pelunasan ───────▶ Verifikasi Pelunasan
 │        └── Export ke PDF (DomPDF)                         │
 │                                                          │
 │  🏦 Rekening ──── CRUD rekening bank                     │
-│        └── Nama bank, nomor rekening, atas nama          │
-│                                                          │
-│  👤 Users ────── CRUD akun karyawan & admin              │
+│        └── Nama bank, kode bank, nomor rekening,         │
+│            atas nama                                     │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -309,7 +312,9 @@ Upload bukti Pelunasan ───────▶ Verifikasi Pelunasan
 │  📅 Jadwal ─────── Daftar jadwal acara yang di-assign    │
 │        ├── Lihat detail acara                            │
 │        ├── Lihat lokasi acara                            │
-│        └── Update status kehadiran                       │
+│        └── Konfirmasi kesediaan                          │
+│              ├── ✅ Bersedia                              │
+│              └── ❌ Tidak Bersedia (catatan wajib diisi)  │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -319,50 +324,55 @@ Upload bukti Pelunasan ───────▶ Verifikasi Pelunasan
 ## 🗃️ Database Schema
 
 ```
-┌──────────────┐       ┌──────────────┐       ┌──────────────┐
-│    users     │       │    pakets    │       │   galeris    │
-├──────────────┤       ├──────────────┤       ├──────────────┤
-│ id           │       │ id           │       │ id           │
-│ name         │       │ nama         │       │ judul        │
-│ email        │       │ deskripsi    │       │ path         │
-│ password     │       │ harga        │       │ deskripsi    │
-│ role         │──┐    │ jumlah_pemain│       │ created_at   │
-│ phone        │  │    │ durasi       │       └──────────────┘
-│ address      │  │    │ daftar_isi   │
-│ status       │  │    │ is_active    │
-└──────────────┘  │    └──────┬───────┘
-                  │           │
-                  │    ┌──────┴───────┐      ┌───────────────┐
-                  ├───▶│   bookings   │      │   payments    │
-                  │    ├──────────────┤      ├───────────────┤
-                  │    │ id           │◀─────│ id            │
-                  │    │ user_id (FK) │      │ booking_id(FK)│
-                  │    │ paket_id(FK) │      │ jenis         │
-                  │    │ kode_booking │      │ metode        │
-                  │    │ tanggal_acara│      │ jumlah        │
-                  │    │ jam_acara    │      │ bukti_transfer│
-                  │    │ nama_acara   │      │ status        │
-                  │    │ alamat       │      └───────────────┘
-                  │    │ latitude     │
-                  │    │ longitude    │      ┌───────────────┐
-                  │    │ catatan      │      │   jadwals     │
-                  │    │ status       │◀─────├───────────────┤
-                  │    │ total_harga  │      │ id            │
-                  │    │ biaya_transp │      │ booking_id(FK)│
-                  │    └──────┬───────┘      │ karyawan_id   │
-                  │           │              │ status        │
-                  │           │              └───────────────┘
-                  │           ▼
-                  │    ┌──────────────┐      ┌───────────────┐
-                  ├───▶│ testimonials │      │ bank_accounts │
-                       ├──────────────┤      ├───────────────┤
-                       │ id           │      │ id            │
-                       │ user_id (FK) │      │ nama_bank     │
-                       │ booking_id   │      │ kode_bank     │
-                       │ rating       │      │ nomor_rekening│
-                       │ deskripsi    │      │ atas_nama     │
-                       │ is_approved  │      │ is_active     │
-                       └──────────────┘      └───────────────┘
+┌───────────────┐       ┌──────────────┐       ┌──────────────┐
+│     users     │       │    pakets    │       │   galeris    │
+├───────────────┤       ├──────────────┤       ├──────────────┤
+│ id            │       │ id           │       │ id           │
+│ name          │       │ nama         │       │ judul        │
+│ username (UQ) │       │ deskripsi    │       │ path         │
+│ email         │       │ harga        │       │ deskripsi    │
+│ password      │       │ jumlah_pemain│       │ created_at   │
+│ role          │──┐    │ durasi       │       └──────────────┘
+│ peran         │  │    │ daftar_isi   │
+│ phone         │  │    │ is_active    │
+│ address       │  │    └──────┬───────┘
+│ status        │  │           │
+└───────────────┘  │           │
+                   │    ┌──────┴───────┐      ┌───────────────┐
+                   ├───▶│   bookings   │      │   payments    │
+                   │    ├──────────────┤      ├───────────────┤
+                   │    │ id           │◀─────│ id            │
+                   │    │ user_id (FK) │      │ booking_id(FK)│
+                   │    │ paket_id(FK) │      │ jenis         │
+                   │    │ kode_booking │      │ metode        │
+                   │    │ tanggal_acara│      │ jumlah        │
+                   │    │ jam_acara    │      │ bukti_transfer│
+                   │    │ nama_acara   │      │ status        │
+                   │    │ alamat       │      │ catatan_admin │
+                   │    │ latitude     │      │ verified_at   │
+                   │    │ longitude    │      └───────────────┘
+                   │    │ catatan      │
+                   │    │ status       │      ┌───────────────┐
+                   │    │ total_harga  │      │   jadwals     │
+                   │    │ biaya_transp │      ├───────────────┤
+                   │    └──────┬───────┘◀─────│ id            │
+                   │           │              │ booking_id(FK)│
+                   │           │              │ karyawan_id   │
+                   │           │              │ peran         │
+                   │           │              │ status_hadir  │
+                   │           │              │ catatan       │
+                   │           │              └───────────────┘
+                   │           ▼
+                   │    ┌──────────────┐      ┌───────────────┐
+                   ├───▶│ testimonials │      │ bank_accounts │
+                        ├──────────────┤      ├───────────────┤
+                        │ id           │      │ id            │
+                        │ user_id (FK) │      │ nama_bank     │
+                        │ booking_id   │      │ kode_bank     │
+                        │ rating       │      │ nomor_rekening│
+                        │ deskripsi    │      │ atas_nama     │
+                        │ is_approved  │      │ is_active     │
+                        └──────────────┘      └───────────────┘
 ```
 
 ### Status Booking
@@ -370,12 +380,20 @@ Upload bukti Pelunasan ───────▶ Verifikasi Pelunasan
 | Status | Label | Deskripsi |
 |--------|-------|-----------|
 | `pending` | Menunggu Konfirmasi | Booking baru dibuat pelanggan |
-| `confirmed` | Dikonfirmasi | Admin sudah mengkonfirmasi |
+| `confirmed` | Dikonfirmasi | Booking dikonfirmasi (otomatis saat dibuat) |
 | `dp_paid` | DP Dibayar | DP sudah diverifikasi |
 | `paid` | Lunas | Pelunasan sudah diverifikasi |
 | `ongoing` | Berlangsung | Acara sedang berlangsung |
 | `completed` | Selesai | Acara sudah selesai |
 | `cancelled` | Dibatalkan | Booking dibatalkan |
+
+### Status Kesediaan Karyawan
+
+| Status | Label | Deskripsi |
+|--------|-------|-----------|
+| `belum` | Menunggu Konfirmasi | Karyawan belum mengonfirmasi kesediaan |
+| `hadir` | Bersedia | Karyawan bersedia hadir |
+| `tidak_hadir` | Tidak Bersedia | Karyawan tidak bersedia (catatan alasan wajib) |
 
 ---
 
@@ -485,18 +503,18 @@ npm run build
 
 ## 🔑 Akun Default
 
-Setelah menjalankan `php artisan db:seed`, akun berikut akan tersedia:
+Setelah menjalankan `php artisan db:seed`, login dapat dilakukan menggunakan **Username** dan **Password** berikut:
 
-| Role | Email | Password |
-|------|-------|----------|
-| **Admin** | `admin@sigantara.com` | `password` |
-| **Owner** | `owner@sigantara.com` | `password` |
-| **Karyawan 1** | `karyawan1@sigantara.com` | `password` |
-| **Karyawan 2** | `karyawan2@sigantara.com` | `password` |
-| **Karyawan 3** | `karyawan3@sigantara.com` | `password` |
-| **Karyawan 4** | `karyawan4@sigantara.com` | `password` |
-| **Karyawan 5** | `karyawan5@sigantara.com` | `password` |
-| **Pelanggan** | `pelanggan@sigantara.com` | `password` |
+| Role | Username | Password | Nama | Peran/Posisi |
+|------|----------|----------|------|--------------|
+| **Admin** | `admin` | `password` | Administrator | — |
+| **Owner** | `owner` | `password` | Pemilik Alan Group | — |
+| **Karyawan 1** | `ahmadsurya` | `password` | Ahmad Surya | Penopang Singa |
+| **Karyawan 2** | `saifulanwar` | `password` | Saiful Anwar | Pemain Kendang |
+| **Karyawan 3** | `tito` | `password` | Tito | Pemain Terompet |
+| **Karyawan 4** | `dffa` | `password` | Dffa | Pemain Gong |
+| **Karyawan 5** | `safut` | `password` | Safut | Pemandu Acara |
+| **Pelanggan** | `pelanggan` | `password` | Pelanggan Demo | — |
 
 > ⚠️ **Penting:** Ganti semua password default sebelum deploy ke production!
 
