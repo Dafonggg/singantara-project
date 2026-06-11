@@ -171,10 +171,12 @@
                                         <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $jadwal->status_hadir === 'hadir' ? 'bg-green-500/10 text-green-400' : ($jadwal->status_hadir === 'tidak_hadir' ? 'bg-red-500/10 text-red-400' : 'bg-gray-500/10 text-gray-400') }}">
                                             {{ $jadwal->status_hadir_label }}
                                         </span>
+                                        @if(!in_array($booking->status, ['completed', 'cancelled']))
                                         <form method="POST" action="{{ route('admin.jadwal.remove', $jadwal) }}" onsubmit="return confirm('Hapus karyawan ini dari penugasan?')">
                                             @csrf @method('DELETE')
                                             <button class="text-xs text-red-400 hover:text-red-300">Hapus</button>
                                         </form>
+                                        @endif
                                     </div>
                                 </div>
                                 @if($jadwal->status_hadir === 'tidak_hadir' && $jadwal->catatan)
@@ -185,6 +187,7 @@
                             </div>
                         @endforeach
  
+                         @if(!in_array($booking->status, ['completed', 'cancelled']))
                          {{-- Only show assign form if there are available karyawans --}}
                          @if($karyawans->count() > 0)
                              <form method="POST" action="{{ route('admin.bookings.assign', $booking) }}" class="mt-4 space-y-3">
@@ -200,6 +203,11 @@
                          @else
                              <div class="mt-4 p-3 rounded-xl bg-dark-800/50 text-xs text-dark-400 text-center">
                                  Semua karyawan aktif sudah ditugaskan ke booking ini.
+                             </div>
+                         @endif
+                         @else
+                             <div class="mt-4 p-3 rounded-xl bg-dark-800/30 border border-dark-700/30 text-xs text-dark-500 text-center">
+                                 Penugasan karyawan sudah final karena booking {{ strtolower($booking->status_label) }}.
                              </div>
                          @endif
                     </div>

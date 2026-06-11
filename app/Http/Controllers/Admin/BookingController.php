@@ -60,6 +60,11 @@ class BookingController extends Controller
 
     public function assignKaryawan(Request $request, Booking $booking)
     {
+        // Tidak boleh assign karyawan jika booking sudah selesai atau batal
+        if (in_array($booking->status, ['completed', 'cancelled'])) {
+            return back()->with('error', 'Tidak dapat menugaskan karyawan karena booking sudah ' . $booking->status_label . '.');
+        }
+
         $request->validate([
             'karyawan_id' => 'required|exists:users,id',
         ]);
@@ -86,6 +91,11 @@ class BookingController extends Controller
 
     public function removeKaryawan(Jadwal $jadwal)
     {
+        $booking = $jadwal->booking;
+        if (in_array($booking->status, ['completed', 'cancelled'])) {
+            return back()->with('error', 'Tidak dapat menghapus karyawan karena booking sudah ' . $booking->status_label . '.');
+        }
+
         $jadwal->delete();
 
         return back()->with('success', 'Karyawan berhasil dihapus dari jadwal.');

@@ -267,12 +267,6 @@ class CustomerController extends Controller
             if ($pelunasanVerified) {
                 return back()->with('error', 'Pelunasan sudah dibayar.');
             }
-            // Pelunasan can only be done after DP is verified or booking status is dp_paid or higher
-            $dpVerified = $booking->payments()->where('jenis', 'dp')->where('status', 'verified')->exists()
-                          || in_array($booking->status, ['dp_paid', 'paid', 'ongoing', 'completed']);
-            if (!$dpVerified) {
-                return back()->with('error', 'DP harus diverifikasi terlebih dahulu sebelum melakukan pelunasan.');
-            }
         }
 
         $path = $request->file('bukti_transfer')->store('payments', 'public');
