@@ -70,9 +70,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($pakets as $paket)
                     <div class="glass rounded-2xl overflow-hidden group hover:-translate-y-2 transition-all duration-300 flex flex-col">
-                        {{-- Image placeholder --}}
-                        <div class="h-48 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center">
-                            <x-heroicon-s-trophy class="w-16 h-16 text-primary-400/60" />
+                        {{-- Image --}}
+                        <div class="h-48 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center overflow-hidden">
+                            @if($paket->gambar)
+                                <img src="{{ Storage::url($paket->gambar) }}" alt="{{ $paket->nama }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                            @else
+                                <x-heroicon-s-trophy class="w-16 h-16 text-primary-400/60" />
+                            @endif
                         </div>
 
                         <div class="p-6 flex flex-col flex-1">

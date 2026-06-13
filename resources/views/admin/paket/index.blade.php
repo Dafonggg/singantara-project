@@ -12,7 +12,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($pakets as $paket)
                     <div class="glass rounded-2xl overflow-hidden">
-                        <div class="h-40 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center"><x-heroicon-s-trophy class="w-12 h-12 text-primary-400/60" /></div>
+                        <div class="h-40 bg-gradient-to-br from-primary-600/20 to-accent-600/20 flex items-center justify-center overflow-hidden">
+                            @if($paket->gambar)
+                                <img src="{{ Storage::url($paket->gambar) }}" alt="{{ $paket->nama }}" class="w-full h-full object-cover">
+                            @else
+                                <x-heroicon-s-trophy class="w-12 h-12 text-primary-400/60" />
+                            @endif
+                        </div>
                         <div class="p-5">
                             <div class="flex items-center justify-between mb-2">
                                 <h3 class="font-bold">{{ $paket->nama }}</h3>

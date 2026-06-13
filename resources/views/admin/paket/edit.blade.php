@@ -56,6 +56,11 @@
 
                     <div>
                         <label class="block text-sm font-medium text-dark-300 mb-2">Gambar (kosongkan jika tidak ingin mengubah)</label>
+                        @if($paket->gambar)
+                            <div class="mb-3">
+                                <img src="{{ Storage::url($paket->gambar) }}" alt="{{ $paket->nama }}" class="w-32 h-32 object-cover rounded-xl">
+                            </div>
+                        @endif
                         <input type="file" name="gambar" accept="image/*" class="w-full text-sm text-dark-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-500/10 file:text-primary-400">
                     </div>
                     <label class="flex items-center gap-2 cursor-pointer">
